@@ -371,17 +371,24 @@
     /* Activity */
     .activity-item { display: flex; gap: 14px; padding: 14px 0; border-top: 1px solid #f0f0f0; align-items: flex-start; }
     .activity-item:first-child { border-top: none; }
-    .activity-dot { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+    .activity-dot { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; margin-top: 1px; }
     .dot-created { background: #d3f9d8; }
     .dot-updated { background: #e8f0fe; }
     .dot-deleted { background: #ffe3e3; }
-    .activity-body { flex: 1; }
+    .dot-restored { background: #fff3cd; }
+    .activity-body { flex: 1; min-width: 0; }
     .activity-text { font-size: 14px; color: #1a1a2e; line-height: 1.4; }
     .activity-text strong { font-weight: 600; }
-    .activity-time { font-size: 12px; color: #bbb; margin-top: 3px; }
-    .activity-filter { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+    .activity-meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+    .activity-time { font-size: 12px; color: #bbb; }
+    .activity-user { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #888; }
+    .user-avatar { width: 18px; height: 18px; border-radius: 50%; background: #6c63ff; color: #fff; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .activity-filter { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; }
     .btn-filter { background: #f0f0f0; color: #555; border: none; border-radius: 20px; padding: 6px 14px; font-size: 13px; cursor: pointer; font-weight: 500; transition: background 0.2s, color 0.2s; }
     .btn-filter.active { background: #6c63ff; color: #fff; }
+    .activity-user-filter { margin-left: auto; padding: 5px 10px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 13px; color: #555; background: #fff; cursor: pointer; }
+    .activity-load-more { text-align: center; margin-top: 18px; }
+    .activity-count { font-size: 13px; color: #bbb; margin-left: 4px; }
 
     /* Login */
     .login-screen {
@@ -637,6 +644,8 @@
     body.dark .activity-item { border-color: #374151; }
     body.dark .activity-text { color: #f9fafb; }
     body.dark .activity-time { color: #6b7280; }
+    body.dark .activity-user { color: #9ca3af; }
+    body.dark .activity-user-filter { background: #1f2937; border-color: #374151; color: #f9fafb; }
 
     body.dark .tag-manager-row input { background: #111827; border-color: #374151; color: #f9fafb; }
     body.dark .tag-add-select { background: #111827; border-color: #374151; color: #f9fafb; }
@@ -1121,15 +1130,23 @@
     <div id="tab-activity" style="display:none">
       <div class="card">
         <div class="card-header">
-          <h2>Activity Log</h2>
+          <h2>Activity Log <span class="activity-count" id="activity-total"></span></h2>
         </div>
         <div class="activity-filter">
           <button class="btn-filter active" onclick="setActivityFilter('')">All</button>
           <button class="btn-filter" onclick="setActivityFilter('contact')">Contacts</button>
           <button class="btn-filter" onclick="setActivityFilter('deal')">Deals</button>
           <button class="btn-filter" onclick="setActivityFilter('task')">Tasks</button>
+          <button class="btn-filter" onclick="setActivityFilter('stage')">Stages</button>
+          <button class="btn-filter" onclick="setActivityFilter('backup')">Backups</button>
+          <select class="activity-user-filter" id="activity-user-filter" onchange="loadActivity(true)">
+            <option value="">All users</option>
+          </select>
         </div>
         <div id="activity-list"><div class="empty">No activity yet</div></div>
+        <div class="activity-load-more" id="activity-load-more" style="display:none">
+          <button class="btn btn-secondary" onclick="loadMoreActivity()">Load more</button>
+        </div>
       </div>
     </div>
 
@@ -2326,7 +2343,7 @@ async function exportDashboardPDF() {
     head: [['Stage', 'Deals', 'Total']],
     body: pipelineStages.map(s => {
       const sd = deals.filter(d => d.status === s.name);
-      return [s.label, String(sd.length), sd.reduce((sum, d) => sum + (d.amount || 0), 0), {maximumFractionDigits:0})];
+      return [s.label, String(sd.length), fmtUSD(sd.reduce((sum, d) => sum + (d.amount || 0), 0))];
     }),
     startY: y,
     headStyles: { fillColor: purple },
@@ -3041,12 +3058,14 @@ async function refreshDealTags() {
 // --- Activity Log ---
 
 let activityFilter = '';
+let activityOffset = 0;
+const ACTIVITY_PAGE = 50;
 
 function setActivityFilter(type) {
   activityFilter = type;
   document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
   event.currentTarget.classList.add('active');
-  loadActivity();
+  loadActivity(true);
 }
 
 function timeAgo(dateStr) {
@@ -3065,22 +3084,39 @@ const activityMeta = {
   contact: { icon: '👤', label: 'contact' },
   deal:    { icon: '💼', label: 'deal' },
   task:    { icon: '✓',  label: 'task' },
+  stage:   { icon: '⚙',  label: 'stage' },
+  backup:  { icon: '💾', label: 'backup' },
 };
 
 const actionMeta = {
-  created: { dot: 'dot-created', verb: 'Created' },
-  updated: { dot: 'dot-updated', verb: 'Updated' },
-  deleted: { dot: 'dot-deleted', verb: 'Deleted' },
+  created:  { dot: 'dot-created',  verb: 'Created' },
+  updated:  { dot: 'dot-updated',  verb: 'Updated' },
+  deleted:  { dot: 'dot-deleted',  verb: 'Deleted' },
+  restored: { dot: 'dot-restored', verb: 'Restored' },
 };
 
-async function loadActivity() {
-  const url = activityFilter
-    ? `${API}/activity?entity_type=${activityFilter}`
-    : `${API}/activity`;
-  const items = await apiFetch(url).then(r => r.json());
+function userAvatarHtml(username) {
+  if (!username) return '';
+  const initial = username.charAt(0).toUpperCase();
+  return `<span class="activity-user"><span class="user-avatar">${initial}</span>${username}</span>`;
+}
+
+async function loadActivity(reset = false) {
+  if (reset) activityOffset = 0;
+  const userFilter = document.getElementById('activity-user-filter')?.value || '';
+  const params = new URLSearchParams({ limit: ACTIVITY_PAGE, offset: activityOffset });
+  if (activityFilter) params.set('entity_type', activityFilter);
+  if (userFilter)     params.set('username', userFilter);
+
+  const { rows, total } = await apiFetch(`${API}/activity?${params}`).then(r => r.json());
   const el = document.getElementById('activity-list');
-  if (!items.length) { el.innerHTML = '<div class="empty">No activity yet</div>'; return; }
-  el.innerHTML = items.map(a => {
+
+  document.getElementById('activity-total').textContent = total ? `${total} events` : '';
+
+  if (reset) el.innerHTML = '';
+  if (!rows.length && reset) { el.innerHTML = '<div class="empty">No activity yet</div>'; }
+
+  el.insertAdjacentHTML('beforeend', rows.map(a => {
     const am = actionMeta[a.action] || { dot: 'dot-updated', verb: a.action };
     const em = activityMeta[a.entity_type] || { icon: '•', label: a.entity_type };
     return `
@@ -3088,10 +3124,32 @@ async function loadActivity() {
         <div class="activity-dot ${am.dot}">${em.icon}</div>
         <div class="activity-body">
           <div class="activity-text">${am.verb} <strong>${em.label}</strong> — ${a.entity_name || '(unnamed)'}</div>
-          <div class="activity-time">${timeAgo(a.created_at)}</div>
+          <div class="activity-meta">
+            <span class="activity-time">${timeAgo(a.created_at)}</span>
+            ${userAvatarHtml(a.username)}
+          </div>
         </div>
       </div>`;
-  }).join('');
+  }).join(''));
+
+  activityOffset += rows.length;
+  const loadMoreEl = document.getElementById('activity-load-more');
+  loadMoreEl.style.display = activityOffset < total ? '' : 'none';
+
+  if (reset) populateActivityUserFilter();
+}
+
+async function loadMoreActivity() {
+  await loadActivity(false);
+}
+
+async function populateActivityUserFilter() {
+  const sel = document.getElementById('activity-user-filter');
+  const current = sel.value;
+  const { rows } = await apiFetch(`${API}/activity?limit=1000&offset=0`).then(r => r.json());
+  const users = [...new Set(rows.map(r => r.username).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">All users</option>' +
+    users.map(u => `<option value="${u}" ${u === current ? 'selected' : ''}>${u}</option>`).join('');
 }
 
 // --- CSV Import ---

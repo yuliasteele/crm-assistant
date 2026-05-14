@@ -137,9 +137,9 @@ app.get('/contacts', (req, res) => {
   res.json(withTags(contacts, 'contact_tags', 'contact_id'));
 });
 
-function logActivity(action, entityType, entityId, entityName) {
-  db.prepare('INSERT INTO activity_log (action, entity_type, entity_id, entity_name) VALUES (?, ?, ?, ?)')
-    .run(action, entityType, entityId ?? null, entityName ?? null);
+function logActivity(action, entityType, entityId, entityName, userId = null, username = null) {
+  db.prepare('INSERT INTO activity_log (action, entity_type, entity_id, entity_name, user_id, username) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(action, entityType, entityId ?? null, entityName ?? null, userId, username);
 }
 
 app.post('/contacts', (req, res) => {
@@ -147,7 +147,7 @@ app.post('/contacts', (req, res) => {
   const result = db.prepare(
     'INSERT INTO contacts (name, email, phone, company) VALUES (?, ?, ?, ?)'
   ).run(name, email, phone, company);
-  logActivity('created', 'contact', result.lastInsertRowid, name);
+  logActivity('created', 'contact', result.lastInsertRowid, name, req.user.id, req.user.username);
   res.json({ id: result.lastInsertRowid });
 });
 
@@ -156,14 +156,14 @@ app.put('/contacts/:id', (req, res) => {
   db.prepare(
     'UPDATE contacts SET name=?, email=?, phone=?, company=? WHERE id=?'
   ).run(name, email, phone, company, req.params.id);
-  logActivity('updated', 'contact', req.params.id, name);
+  logActivity('updated', 'contact', req.params.id, name, req.user.id, req.user.username);
   res.json({ success: true });
 });
 
 app.delete('/contacts/:id', (req, res) => {
   const row = db.prepare('SELECT name FROM contacts WHERE id=?').get(req.params.id);
   db.prepare('DELETE FROM contacts WHERE id=?').run(req.params.id);
-  logActivity('deleted', 'contact', req.params.id, row?.name);
+  logActivity('deleted', 'contact', req.params.id, row?.name, req.user.id, req.user.username);
   res.json({ success: true });
 });
 
@@ -183,7 +183,7 @@ app.post('/deals', (req, res) => {
   const result = db.prepare(
     'INSERT INTO deals (title, amount, status, contact_id, probability) VALUES (?, ?, ?, ?, ?)'
   ).run(title, amount, status || 'new', contact_id, probability ?? null);
-  logActivity('created', 'deal', result.lastInsertRowid, title);
+  logActivity('created', 'deal', result.lastInsertRowid, title, req.user.id, req.user.username);
   res.json({ id: result.lastInsertRowid });
 });
 
@@ -193,7 +193,7 @@ app.put('/deals/:id', (req, res) => {
   db.prepare(
     'UPDATE deals SET title=?, amount=?, status=?, contact_id=?, probability=? WHERE id=?'
   ).run(title, amount, status, contact_id, probability ?? null, req.params.id);
-  logActivity('updated', 'deal', req.params.id, title);
+  logActivity('updated', 'deal', req.params.id, title, req.user.id, req.user.username);
   if (old && status && old.status !== status) {
     const stage = db.prepare('SELECT label FROM pipeline_stages WHERE name=?').get(status);
     const oldStage = db.prepare('SELECT label FROM pipeline_stages WHERE name=?').get(old.status);
@@ -212,7 +212,7 @@ app.put('/deals/:id', (req, res) => {
 app.delete('/deals/:id', (req, res) => {
   const row = db.prepare('SELECT title FROM deals WHERE id=?').get(req.params.id);
   db.prepare('DELETE FROM deals WHERE id=?').run(req.params.id);
-  logActivity('deleted', 'deal', req.params.id, row?.title);
+  logActivity('deleted', 'deal', req.params.id, row?.title, req.user.id, req.user.username);
   res.json({ success: true });
 });
 
@@ -232,7 +232,7 @@ app.post('/tasks', (req, res) => {
   const result = db.prepare(
     'INSERT INTO tasks (description, deadline, status, contact_id) VALUES (?, ?, ?, ?)'
   ).run(description, deadline, status || 'pending', contact_id);
-  logActivity('created', 'task', result.lastInsertRowid, description);
+  logActivity('created', 'task', result.lastInsertRowid, description, req.user.id, req.user.username);
   if (deadline) {
     const contact = contact_id ? db.prepare('SELECT name FROM contacts WHERE id=?').get(contact_id) : null;
     sendEmail(
@@ -252,14 +252,14 @@ app.put('/tasks/:id', (req, res) => {
   db.prepare(
     'UPDATE tasks SET description=?, deadline=?, status=?, contact_id=? WHERE id=?'
   ).run(description, deadline, status, contact_id, req.params.id);
-  logActivity('updated', 'task', req.params.id, description);
+  logActivity('updated', 'task', req.params.id, description, req.user.id, req.user.username);
   res.json({ success: true });
 });
 
 app.delete('/tasks/:id', (req, res) => {
   const row = db.prepare('SELECT description FROM tasks WHERE id=?').get(req.params.id);
   db.prepare('DELETE FROM tasks WHERE id=?').run(req.params.id);
-  logActivity('deleted', 'task', req.params.id, row?.description);
+  logActivity('deleted', 'task', req.params.id, row?.description, req.user.id, req.user.username);
   res.json({ success: true });
 });
 
@@ -471,54 +471,56 @@ function sanitizeContactArgs(args, message) {
   };
 }
 
-function executeTool(name, args) {
+function executeTool(name, args, user = null) {
+  const uid = user?.id ?? null;
+  const uname = user?.username ?? null;
   if (args.id         != null) args.id         = Number(args.id);
   if (args.contact_id != null) args.contact_id = Number(args.contact_id);
   if (args.amount     != null) args.amount     = Number(args.amount);
   switch (name) {
     case 'create_contact': {
       const id = db.prepare('INSERT INTO contacts (name, email, phone, company) VALUES (?, ?, ?, ?)').run(args.name, args.email ?? null, args.phone ?? null, args.company ?? null).lastInsertRowid;
-      logActivity('created', 'contact', id, args.name);
+      logActivity('created', 'contact', id, args.name, uid, uname);
       return { id };
     }
     case 'update_contact':
       db.prepare('UPDATE contacts SET name=?, email=?, phone=?, company=? WHERE id=?').run(args.name, args.email ?? null, args.phone ?? null, args.company ?? null, args.id);
-      logActivity('updated', 'contact', args.id, args.name);
+      logActivity('updated', 'contact', args.id, args.name, uid, uname);
       return { success: true };
     case 'delete_contact': {
       const row = db.prepare('SELECT name FROM contacts WHERE id=?').get(args.id);
       db.prepare('DELETE FROM contacts WHERE id=?').run(args.id);
-      logActivity('deleted', 'contact', args.id, row?.name);
+      logActivity('deleted', 'contact', args.id, row?.name, uid, uname);
       return { success: true };
     }
     case 'create_deal': {
       const id = db.prepare('INSERT INTO deals (title, amount, status, contact_id) VALUES (?, ?, ?, ?)').run(args.title, args.amount ?? null, args.status ?? 'new', args.contact_id ?? null).lastInsertRowid;
-      logActivity('created', 'deal', id, args.title);
+      logActivity('created', 'deal', id, args.title, uid, uname);
       return { id };
     }
     case 'update_deal':
       db.prepare('UPDATE deals SET title=?, amount=?, status=?, contact_id=? WHERE id=?').run(args.title, args.amount ?? null, args.status ?? 'new', args.contact_id ?? null, args.id);
-      logActivity('updated', 'deal', args.id, args.title);
+      logActivity('updated', 'deal', args.id, args.title, uid, uname);
       return { success: true };
     case 'delete_deal': {
       const row = db.prepare('SELECT title FROM deals WHERE id=?').get(args.id);
       db.prepare('DELETE FROM deals WHERE id=?').run(args.id);
-      logActivity('deleted', 'deal', args.id, row?.title);
+      logActivity('deleted', 'deal', args.id, row?.title, uid, uname);
       return { success: true };
     }
     case 'create_task': {
       const id = db.prepare('INSERT INTO tasks (description, deadline, status, contact_id) VALUES (?, ?, ?, ?)').run(args.description, args.deadline ?? null, args.status ?? 'pending', args.contact_id ?? null).lastInsertRowid;
-      logActivity('created', 'task', id, args.description);
+      logActivity('created', 'task', id, args.description, uid, uname);
       return { id };
     }
     case 'update_task':
       db.prepare('UPDATE tasks SET description=?, deadline=?, status=?, contact_id=? WHERE id=?').run(args.description, args.deadline ?? null, args.status ?? 'pending', args.contact_id ?? null, args.id);
-      logActivity('updated', 'task', args.id, args.description);
+      logActivity('updated', 'task', args.id, args.description, uid, uname);
       return { success: true };
     case 'delete_task': {
       const row = db.prepare('SELECT description FROM tasks WHERE id=?').get(args.id);
       db.prepare('DELETE FROM tasks WHERE id=?').run(args.id);
-      logActivity('deleted', 'task', args.id, row?.description);
+      logActivity('deleted', 'task', args.id, row?.description, uid, uname);
       return { success: true };
     }
     default:
@@ -571,7 +573,7 @@ Tasks: ${JSON.stringify(db.prepare('SELECT * FROM tasks').all())}`;
       if (tc.function.name === 'create_contact' || tc.function.name === 'update_contact') {
         args = sanitizeContactArgs(args, message);
       }
-      const result = executeTool(tc.function.name, args);
+      const result = executeTool(tc.function.name, args, req.user);
       toolsUsed.push(tc.function.name);
       return {
         role: 'tool',
@@ -752,7 +754,7 @@ app.post('/backup/restore', requireAdmin,
     }
     try {
       fs.writeFileSync(path.join(__dirname, 'crm.db'), buf);
-      logActivity('restored', 'backup', null, 'database');
+      logActivity('restored', 'backup', null, 'database', req.user.id, req.user.username);
       res.json({ ok: true });
       setTimeout(() => process.exit(0), 400);
     } catch (e) {
@@ -775,7 +777,7 @@ app.post('/pipeline-stages', requireAdmin, (req, res) => {
   try {
     const result = db.prepare('INSERT INTO pipeline_stages (name, label, color, position, is_won, is_lost) VALUES (?, ?, ?, ?, ?, ?)')
       .run(name, label, color, maxPos + 1, is_won ? 1 : 0, is_lost ? 1 : 0);
-    logActivity('created', 'stage', result.lastInsertRowid, label);
+    logActivity('created', 'stage', result.lastInsertRowid, label, req.user.id, req.user.username);
     res.json(db.prepare('SELECT * FROM pipeline_stages WHERE id = ?').get(result.lastInsertRowid));
   } catch {
     res.status(400).json({ error: 'Stage with this name already exists' });
@@ -808,12 +810,18 @@ app.delete('/pipeline-stages/:id', requireAdmin, (req, res) => {
 // --- Activity Log ---
 
 app.get('/activity', (req, res) => {
-  const { entity_type } = req.query;
-  let query = 'SELECT * FROM activity_log';
+  const { entity_type, username, limit = 50, offset = 0 } = req.query;
+  const conds = [];
   const params = [];
-  if (entity_type) { query += ' WHERE entity_type = ?'; params.push(entity_type); }
-  query += ' ORDER BY created_at DESC LIMIT 100';
-  res.json(db.prepare(query).all(...params));
+  if (entity_type) { conds.push('entity_type = ?'); params.push(entity_type); }
+  if (username)    { conds.push('username = ?');    params.push(username); }
+  let query = 'SELECT * FROM activity_log';
+  if (conds.length) query += ' WHERE ' + conds.join(' AND ');
+  query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+  params.push(Number(limit), Number(offset));
+  const rows = db.prepare(query).all(...params);
+  const total = db.prepare('SELECT COUNT(*) as n FROM activity_log' + (conds.length ? ' WHERE ' + conds.join(' AND ') : '')).get(...params.slice(0, -2)).n;
+  res.json({ rows, total });
 });
 
 app.use((err, req, res, next) => {
