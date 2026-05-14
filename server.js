@@ -678,6 +678,32 @@ app.delete('/deals/:id/tags/:tag_id', (req, res) => {
   res.json({ success: true });
 });
 
+// --- Global Search ---
+
+app.get('/search', (req, res) => {
+  const q = (req.query.q || '').trim();
+  if (!q) return res.json({ contacts: [], deals: [], tasks: [] });
+  const like = `%${q}%`;
+  const contacts = db.prepare(`
+    SELECT id, name, email, company FROM contacts
+    WHERE name LIKE ? OR email LIKE ? OR phone LIKE ? OR company LIKE ?
+    LIMIT 5
+  `).all(like, like, like, like);
+  const deals = db.prepare(`
+    SELECT deals.id, deals.title, deals.status, contacts.name AS contact_name
+    FROM deals LEFT JOIN contacts ON deals.contact_id = contacts.id
+    WHERE deals.title LIKE ? OR contacts.name LIKE ?
+    LIMIT 5
+  `).all(like, like);
+  const tasks = db.prepare(`
+    SELECT tasks.id, tasks.description, tasks.status, contacts.name AS contact_name
+    FROM tasks LEFT JOIN contacts ON tasks.contact_id = contacts.id
+    WHERE tasks.description LIKE ? OR contacts.name LIKE ?
+    LIMIT 5
+  `).all(like, like);
+  res.json({ contacts, deals, tasks });
+});
+
 // --- Email status / test ---
 
 app.get('/email/status', requireAdmin, (req, res) => {

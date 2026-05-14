@@ -466,6 +466,27 @@
     .sidebar-overlay.show { display: block; }
 
     /* Bulk actions */
+    .global-search-wrap { position:relative; }
+    .global-search-input { padding:7px 14px 7px 34px; border:1px solid #e0e0e0; border-radius:20px; font-size:13px; outline:none; background:#f5f5f5; width:200px; transition:width 0.2s, border-color 0.2s; }
+    .global-search-input:focus { width:280px; border-color:#6c63ff; background:#fff; }
+    .global-search-icon { position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:13px; color:#999; pointer-events:none; }
+    .global-search-results { position:absolute; top:calc(100% + 6px); right:0; width:320px; background:#fff; border:1px solid #e0e0e0; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.12); z-index:1000; overflow:hidden; display:none; }
+    .global-search-results.show { display:block; }
+    .search-group-title { padding:8px 14px 4px; font-size:11px; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:0.5px; }
+    .search-result-item { padding:9px 14px; cursor:pointer; display:flex; flex-direction:column; gap:2px; border-bottom:1px solid #f5f5f5; }
+    .search-result-item:hover { background:#f5f3ff; }
+    .search-result-item:last-child { border-bottom:none; }
+    .search-result-name { font-size:13px; font-weight:500; color:#1a1a2e; }
+    .search-result-sub { font-size:11px; color:#888; }
+    .search-empty { padding:16px 14px; font-size:13px; color:#aaa; text-align:center; }
+    body.dark .global-search-input { background:#1f2937; border-color:#374151; color:#f9fafb; }
+    body.dark .global-search-input:focus { background:#111827; border-color:#6c63ff; }
+    body.dark .global-search-results { background:#1f2937; border-color:#374151; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+    body.dark .search-result-item { border-bottom-color:#374151; }
+    body.dark .search-result-item:hover { background:#2d2b4e; }
+    body.dark .search-result-name { color:#f9fafb; }
+    body.dark .search-group-title { color:#6b7280; }
+
     .email-status-row { display:flex; align-items:center; gap:12px; padding:8px 0; }
     .email-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
     .email-dot-ok { background:#4ade80; }
@@ -717,6 +738,13 @@
         <span></span><span></span><span></span>
       </button>
       <span id="topbar-title">Contacts</span>
+    </div>
+    <div class="global-search-wrap" id="global-search-wrap">
+      <span class="global-search-icon">🔍</span>
+      <input class="global-search-input" id="global-search-input" type="text"
+             placeholder="Search…" autocomplete="off"
+             oninput="onGlobalSearch()" onfocus="onGlobalSearch()" />
+      <div class="global-search-results" id="global-search-results"></div>
     </div>
     <div class="user-menu" id="user-menu">
       <div class="user-avatar" id="user-avatar" onclick="toggleUserMenu()">?</div>
@@ -2557,6 +2585,72 @@ async function testEmail() {
   if (res.ok) alert('Test email sent! Check your inbox.');
   else alert('Failed: ' + data.error);
 }
+
+// --- Global Search ---
+
+let _searchTimer = null;
+
+function onGlobalSearch() {
+  clearTimeout(_searchTimer);
+  const q = document.getElementById('global-search-input').value.trim();
+  if (!q) { closeGlobalSearch(); return; }
+  _searchTimer = setTimeout(() => runGlobalSearch(q), 280);
+}
+
+async function runGlobalSearch(q) {
+  const data = await apiFetch(`${API}/search?q=${encodeURIComponent(q)}`).then(r => r.json());
+  const panel = document.getElementById('global-search-results');
+  const total = data.contacts.length + data.deals.length + data.tasks.length;
+
+  if (!total) {
+    panel.innerHTML = `<div class="search-empty">No results for "${q}"</div>`;
+    panel.classList.add('show');
+    return;
+  }
+
+  let html = '';
+  if (data.contacts.length) {
+    html += `<div class="search-group-title">Contacts</div>`;
+    html += data.contacts.map(c => `
+      <div class="search-result-item" onclick="closeGlobalSearch();openContact(${c.id})">
+        <div class="search-result-name">${c.name}</div>
+        <div class="search-result-sub">${[c.email, c.company].filter(Boolean).join(' · ')}</div>
+      </div>`).join('');
+  }
+  if (data.deals.length) {
+    html += `<div class="search-group-title">Deals</div>`;
+    html += data.deals.map(d => `
+      <div class="search-result-item" onclick="closeGlobalSearch();showTab('deals');setTimeout(()=>openDeal(${d.id}),100)">
+        <div class="search-result-name">${d.title}</div>
+        <div class="search-result-sub">${[d.contact_name, pipelineStages.find(s=>s.name===d.status)?.label||d.status].filter(Boolean).join(' · ')}</div>
+      </div>`).join('');
+  }
+  if (data.tasks.length) {
+    html += `<div class="search-group-title">Tasks</div>`;
+    html += data.tasks.map(t => `
+      <div class="search-result-item" onclick="closeGlobalSearch();showTab('tasks')">
+        <div class="search-result-name">${t.description}</div>
+        <div class="search-result-sub">${[t.contact_name, t.status].filter(Boolean).join(' · ')}</div>
+      </div>`).join('');
+  }
+
+  panel.innerHTML = html;
+  panel.classList.add('show');
+}
+
+function closeGlobalSearch() {
+  document.getElementById('global-search-results').classList.remove('show');
+  document.getElementById('global-search-input').value = '';
+}
+
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('global-search-wrap');
+  if (wrap && !wrap.contains(e.target)) closeGlobalSearch();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeGlobalSearch();
+});
 
 // --- Backup / Restore ---
 
