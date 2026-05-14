@@ -9,6 +9,8 @@
   <style>.dark-init body { background: #111827; }</style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -295,6 +297,8 @@
     .btn-export:hover { background: #e0e0e0; }
     .btn-export.xlsx { background: #e8f5e9; color: #2e7d32; }
     .btn-export.xlsx:hover { background: #c8e6c9; }
+    .btn-export.pdf { background: #fde8e8; color: #b91c1c; }
+    .btn-export.pdf:hover { background: #fecaca; }
 
     .btn-mic {
       background: #f0f0f0;
@@ -570,6 +574,7 @@
     body.dark .btn-export { background: #374151; color: #d1d5db; }
     body.dark .btn-export:hover { background: #4b5563; }
     body.dark .btn-export.xlsx  { background: #14532d; color: #86efac; }
+    body.dark .btn-export.pdf   { background: #450a0a; color: #fca5a5; }
     body.dark .btn-mic    { background: #374151; color: #d1d5db; }
     body.dark .btn-mic:hover { background: #4b5563; }
     body.dark .btn-view   { background: #374151; color: #d1d5db; }
@@ -733,6 +738,9 @@
 
     <!-- Dashboard -->
     <div id="tab-dashboard">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+        <button class="btn-export pdf" onclick="exportDashboardPDF()">PDF Report</button>
+      </div>
       <div class="stats-grid">
         <div class="stat-card"><div class="label">Contacts</div><div class="value" id="stat-contacts">—</div></div>
         <div class="stat-card"><div class="label">Deals</div><div class="value" id="stat-deals">—</div></div>
@@ -753,6 +761,7 @@
           <div class="export-btns">
             <button class="btn-export" onclick="exportCSV('contacts')">CSV</button>
             <button class="btn-export xlsx" onclick="exportXLSX('contacts')">Excel</button>
+            <button class="btn-export pdf" onclick="exportPDF('contacts')">PDF</button>
             <button class="btn-export" onclick="openImportModal()">⬆ Import CSV</button>
             <button class="btn btn-primary" onclick="openModal('contact')">+ Add</button>
           </div>
@@ -924,6 +933,7 @@
             <button class="btn-export" id="btn-manage-stages" style="display:none" onclick="openStagesModal()">⚙ Stages</button>
             <button class="btn-export" onclick="exportCSV('deals')">CSV</button>
             <button class="btn-export xlsx" onclick="exportXLSX('deals')">Excel</button>
+            <button class="btn-export pdf" onclick="exportPDF('deals')">PDF</button>
             <button class="btn btn-primary" onclick="openModal('deal')">+ Add</button>
           </div>
         </div>
@@ -972,6 +982,7 @@
             </div>
             <button class="btn-export" onclick="exportCSV('tasks')">CSV</button>
             <button class="btn-export xlsx" onclick="exportXLSX('tasks')">Excel</button>
+            <button class="btn-export pdf" onclick="exportPDF('tasks')">PDF</button>
             <button class="btn btn-primary" onclick="openModal('task')">+ Add</button>
           </div>
         </div>
@@ -2180,6 +2191,131 @@ function exportXLSX(type) {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, type);
   XLSX.writeFile(wb, `${type}.xlsx`);
+}
+
+function exportPDF(type) {
+  const src = type === 'contacts' ? contacts : type === 'deals' ? deals : tasks;
+  if (!src.length) return alert('No data to export');
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const purple = [108, 99, 255];
+  const title = type.charAt(0).toUpperCase() + type.slice(1);
+  const date  = new Date().toLocaleDateString('en');
+
+  doc.setFillColor(...purple);
+  doc.rect(0, 0, 297, 28, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16); doc.setFont(undefined, 'bold');
+  doc.text(`${title}`, 14, 13);
+  doc.setFontSize(9); doc.setFont(undefined, 'normal');
+  doc.text(date, 14, 22);
+
+  const cols = Object.keys(exportColumns[type]);
+  const rows = src.map(row => Object.values(exportColumns[type]).map((key, i) => {
+    const v = row[key];
+    if (v == null || v === '') return '—';
+    if (key === 'amount') return Number(v).toLocaleString('en') + ' ₽';
+    if (key === 'status' && type === 'deals') return pipelineStages.find(s => s.name === v)?.label || v;
+    if (key === 'deadline' || key === 'created_at') return new Date(v).toLocaleDateString('en');
+    return String(v);
+  }));
+
+  doc.autoTable({
+    head: [cols], body: rows, startY: 34,
+    headStyles: { fillColor: purple },
+    styles: { fontSize: 8 },
+    alternateRowStyles: { fillColor: [248, 248, 255] },
+  });
+  doc.save(`${type}_${new Date().toISOString().slice(0, 10)}.pdf`);
+}
+
+async function exportDashboardPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc   = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const purple = [108, 99, 255];
+  const date   = new Date().toLocaleDateString('en', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  // Header band
+  doc.setFillColor(...purple);
+  doc.rect(0, 0, 210, 36, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(20); doc.setFont(undefined, 'bold');
+  doc.text('CRM Report', 14, 17);
+  doc.setFontSize(10); doc.setFont(undefined, 'normal');
+  doc.text(date, 14, 29);
+
+  let y = 48;
+  doc.setTextColor(0, 0, 0);
+
+  // Summary stats
+  const wonRevenue = deals
+    .filter(d => pipelineStages.find(s => s.name === d.status)?.is_won)
+    .reduce((s, d) => s + (d.amount || 0), 0);
+  const doneCount = tasks.filter(t => t.status === 'done').length;
+
+  doc.setFontSize(12); doc.setFont(undefined, 'bold');
+  doc.text('Summary', 14, y); y += 5;
+  doc.autoTable({
+    body: [
+      ['Contacts', String(contacts.length), 'Tasks completed', `${doneCount} / ${tasks.length}`],
+      ['Deals', String(deals.length), 'Won revenue', `${wonRevenue.toLocaleString('en')} ₽`],
+    ],
+    startY: y, theme: 'grid',
+    styles: { fontSize: 10, cellPadding: 3 },
+    columnStyles: { 0: { fontStyle: 'bold', fillColor: [240, 240, 255], cellWidth: 45 }, 2: { fontStyle: 'bold', fillColor: [240, 240, 255], cellWidth: 45 } },
+  });
+  y = doc.lastAutoTable.finalY + 10;
+
+  // Pipeline breakdown
+  doc.setFontSize(12); doc.setFont(undefined, 'bold');
+  doc.text('Pipeline', 14, y); y += 5;
+  doc.autoTable({
+    head: [['Stage', 'Deals', 'Total']],
+    body: pipelineStages.map(s => {
+      const sd = deals.filter(d => d.status === s.name);
+      return [s.label, String(sd.length), sd.reduce((sum, d) => sum + (d.amount || 0), 0).toLocaleString('en') + ' ₽'];
+    }),
+    startY: y,
+    headStyles: { fillColor: purple },
+    styles: { fontSize: 9 },
+    alternateRowStyles: { fillColor: [248, 248, 255] },
+  });
+  y = doc.lastAutoTable.finalY + 10;
+
+  // Deals list
+  if (y > 220) { doc.addPage(); y = 20; }
+  doc.setFontSize(12); doc.setFont(undefined, 'bold');
+  doc.text('Deals', 14, y); y += 5;
+  doc.autoTable({
+    head: [['Title', 'Contact', 'Amount', 'Stage']],
+    body: deals.slice(0, 25).map(d => [
+      d.title, d.contact_name || '—',
+      d.amount ? d.amount.toLocaleString('en') + ' ₽' : '—',
+      pipelineStages.find(s => s.name === d.status)?.label || d.status,
+    ]),
+    startY: y, headStyles: { fillColor: purple },
+    styles: { fontSize: 8 }, alternateRowStyles: { fillColor: [248, 248, 255] },
+  });
+  y = doc.lastAutoTable.finalY + 10;
+
+  // Pending tasks
+  const pending = tasks.filter(t => t.status === 'pending');
+  if (pending.length) {
+    if (y > 220) { doc.addPage(); y = 20; }
+    doc.setFontSize(12); doc.setFont(undefined, 'bold');
+    doc.text('Pending Tasks', 14, y); y += 5;
+    doc.autoTable({
+      head: [['Description', 'Contact', 'Deadline']],
+      body: pending.slice(0, 20).map(t => [
+        t.description, t.contact_name || '—',
+        t.deadline ? new Date(t.deadline).toLocaleDateString('en') : '—',
+      ]),
+      startY: y, headStyles: { fillColor: purple },
+      styles: { fontSize: 8 }, alternateRowStyles: { fillColor: [248, 248, 255] },
+    });
+  }
+
+  doc.save(`crm_report_${new Date().toISOString().slice(0, 10)}.pdf`);
 }
 
 function download(content, filename, mime) {
