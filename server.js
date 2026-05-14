@@ -179,20 +179,20 @@ app.get('/deals', (req, res) => {
 });
 
 app.post('/deals', (req, res) => {
-  const { title, amount, status, contact_id } = req.body;
+  const { title, amount, status, contact_id, probability } = req.body;
   const result = db.prepare(
-    'INSERT INTO deals (title, amount, status, contact_id) VALUES (?, ?, ?, ?)'
-  ).run(title, amount, status || 'new', contact_id);
+    'INSERT INTO deals (title, amount, status, contact_id, probability) VALUES (?, ?, ?, ?, ?)'
+  ).run(title, amount, status || 'new', contact_id, probability ?? null);
   logActivity('created', 'deal', result.lastInsertRowid, title);
   res.json({ id: result.lastInsertRowid });
 });
 
 app.put('/deals/:id', (req, res) => {
-  const { title, amount, status, contact_id } = req.body;
+  const { title, amount, status, contact_id, probability } = req.body;
   const old = db.prepare('SELECT status FROM deals WHERE id=?').get(req.params.id);
   db.prepare(
-    'UPDATE deals SET title=?, amount=?, status=?, contact_id=? WHERE id=?'
-  ).run(title, amount, status, contact_id, req.params.id);
+    'UPDATE deals SET title=?, amount=?, status=?, contact_id=?, probability=? WHERE id=?'
+  ).run(title, amount, status, contact_id, probability ?? null, req.params.id);
   logActivity('updated', 'deal', req.params.id, title);
   if (old && status && old.status !== status) {
     const stage = db.prepare('SELECT label FROM pipeline_stages WHERE name=?').get(status);

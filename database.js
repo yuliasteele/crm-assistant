@@ -48,6 +48,7 @@ db.exec(`
 `);
 
 try { db.exec('ALTER TABLE messages ADD COLUMN deal_id INTEGER REFERENCES deals(id)'); } catch {}
+try { db.exec('ALTER TABLE deals ADD COLUMN probability INTEGER'); } catch {}
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
