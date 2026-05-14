@@ -4,6 +4,8 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const Groq = require('groq-sdk');
+const fs = require('fs');
+const path = require('path');
 const db = require('./database');
 
 const app = express();
@@ -593,6 +595,42 @@ app.delete('/deals/:id/tags/:tag_id', (req, res) => {
   db.prepare('DELETE FROM deal_tags WHERE deal_id=? AND tag_id=?').run(req.params.id, req.params.tag_id);
   res.json({ success: true });
 });
+
+// --- Backup / Restore ---
+
+app.get('/backup/download', requireAdmin, async (req, res) => {
+  const tmpPath = path.join(__dirname, `crm_backup_${Date.now()}.db`);
+  try {
+    await db.backup(tmpPath);
+    const date = new Date().toISOString().slice(0, 10);
+    res.download(tmpPath, `crm_backup_${date}.db`, () => {
+      try { fs.unlinkSync(tmpPath); } catch {}
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/backup/restore', requireAdmin,
+  express.raw({ type: 'application/octet-stream', limit: '200mb' }),
+  (req, res) => {
+    const buf = req.body;
+    if (!Buffer.isBuffer(buf) || buf.length < 16) {
+      return res.status(400).json({ error: 'No file received' });
+    }
+    if (!buf.slice(0, 15).toString('ascii').startsWith('SQLite format 3')) {
+      return res.status(400).json({ error: 'Not a valid SQLite database file' });
+    }
+    try {
+      fs.writeFileSync(path.join(__dirname, 'crm.db'), buf);
+      logActivity('restored', 'backup', null, 'database');
+      res.json({ ok: true });
+      setTimeout(() => process.exit(0), 400);
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  }
+);
 
 // --- Pipeline Stages ---
 
