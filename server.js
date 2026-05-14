@@ -202,7 +202,7 @@ app.put('/deals/:id', (req, res) => {
       emailHtml('Deal Status Changed', `
         <p><strong>${title}</strong></p>
         <p>${oldStage?.label || old.status} &rarr; <strong>${stage?.label || status}</strong></p>
-        ${amount ? `<p>Amount: ${Number(amount).toLocaleString('en')} ₽</p>` : ''}
+        ${amount ? `<p>Amount: ${Number(amount).toLocaleString('en')}$</p>` : ''}
       `)
     );
   }
