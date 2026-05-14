@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" translate="no">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="google" content="notranslate" />
   <title>CRM Ассистент</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -34,6 +37,40 @@
       border-bottom: 1px solid #2e2e4d;
       letter-spacing: 0.5px;
     }
+
+    .nav-badge {
+      display: inline-block;
+      background: #ff6b6b;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 10px;
+      padding: 1px 7px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    .row-overdue td { background: #fff5f5 !important; }
+    .row-overdue td:first-child { border-left: 3px solid #ff6b6b; }
+
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .search-bar input, .search-bar select {
+      padding: 9px 14px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      background: #fafafa;
+      transition: border-color 0.2s;
+    }
+
+    .search-bar input { flex: 1; }
+    .search-bar input:focus, .search-bar select:focus { border-color: #6c63ff; background: #fff; }
 
     .nav-item {
       padding: 14px 20px;
@@ -217,15 +254,70 @@
     .chat-input-row input:focus { border-color: #6c63ff; }
 
     .empty { color: #aaa; font-size: 14px; text-align: center; padding: 40px 0; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .stat-card .label { font-size: 13px; color: #888; margin-bottom: 8px; }
+    .stat-card .value { font-size: 28px; font-weight: 700; color: #1a1a2e; }
+    .stat-card .sub   { font-size: 12px; color: #aaa; margin-top: 4px; }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .chart-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .chart-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+
+    .export-btns { display: flex; gap: 8px; align-items: center; }
+    .btn-export { background: #f0f0f0; color: #444; padding: 6px 14px; font-size: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: 500; transition: background 0.2s; }
+    .btn-export:hover { background: #e0e0e0; }
+    .btn-export.xlsx { background: #e8f5e9; color: #2e7d32; }
+    .btn-export.xlsx:hover { background: #c8e6c9; }
+
+    .btn-mic {
+      background: #f0f0f0;
+      color: #333;
+      border: none;
+      border-radius: 10px;
+      padding: 0 14px;
+      font-size: 20px;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .btn-mic:hover { background: #e0e0e0; }
+    .btn-mic.recording { background: #ff6b6b; color: #fff; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
   </style>
 </head>
 <body>
 
 <div class="sidebar">
   <h1>CRM Ассистент</h1>
-  <div class="nav-item active" onclick="showTab('contacts')">Контакты</div>
+  <div class="nav-item active" onclick="showTab('dashboard')">Дашборд</div>
+  <div class="nav-item" onclick="showTab('contacts')">Контакты</div>
   <div class="nav-item" onclick="showTab('deals')">Сделки</div>
-  <div class="nav-item" onclick="showTab('tasks')">Задачи</div>
+  <div class="nav-item" onclick="showTab('tasks')" id="nav-tasks">Задачи</div>
   <div class="nav-item" onclick="showTab('chat')">AI Ассистент</div>
 </div>
 
@@ -236,12 +328,33 @@
 
   <div class="content">
 
+    <!-- Dashboard -->
+    <div id="tab-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="label">Контакты</div><div class="value" id="stat-contacts">—</div></div>
+        <div class="stat-card"><div class="label">Сделки</div><div class="value" id="stat-deals">—</div></div>
+        <div class="stat-card"><div class="label">Выручка (выигранные)</div><div class="value" id="stat-revenue">—</div></div>
+        <div class="stat-card"><div class="label">Задач выполнено</div><div class="value" id="stat-tasks-done">—</div><div class="sub" id="stat-tasks-sub"></div></div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card"><h3>Воронка продаж</h3><canvas id="chart-funnel"></canvas></div>
+        <div class="chart-card"><h3>Сделки по сумме</h3><canvas id="chart-deals"></canvas></div>
+      </div>
+    </div>
+
     <!-- Contacts -->
-    <div id="tab-contacts">
+    <div id="tab-contacts" style="display:none">
       <div class="card">
         <div class="card-header">
           <h2>Все контакты</h2>
-          <button class="btn btn-primary" onclick="openModal('contact')">+ Добавить</button>
+          <div class="export-btns">
+            <button class="btn-export" onclick="exportCSV('contacts')">CSV</button>
+            <button class="btn-export xlsx" onclick="exportXLSX('contacts')">Excel</button>
+            <button class="btn btn-primary" onclick="openModal('contact')">+ Добавить</button>
+          </div>
+        </div>
+        <div class="search-bar">
+          <input type="text" id="search-contacts" placeholder="Поиск по имени, email, компании..." oninput="filterContacts()" />
         </div>
         <table>
           <thead><tr><th>Имя</th><th>Email</th><th>Телефон</th><th>Компания</th><th></th></tr></thead>
@@ -255,7 +368,21 @@
       <div class="card">
         <div class="card-header">
           <h2>Все сделки</h2>
-          <button class="btn btn-primary" onclick="openModal('deal')">+ Добавить</button>
+          <div class="export-btns">
+            <button class="btn-export" onclick="exportCSV('deals')">CSV</button>
+            <button class="btn-export xlsx" onclick="exportXLSX('deals')">Excel</button>
+            <button class="btn btn-primary" onclick="openModal('deal')">+ Добавить</button>
+          </div>
+        </div>
+        <div class="search-bar">
+          <input type="text" id="search-deals" placeholder="Поиск по названию или контакту..." oninput="filterDeals()" />
+          <select id="filter-deals-status" onchange="filterDeals()">
+            <option value="">Все статусы</option>
+            <option value="new">Новые</option>
+            <option value="negotiation">Переговоры</option>
+            <option value="won">Выиграны</option>
+            <option value="lost">Проиграны</option>
+          </select>
         </div>
         <table>
           <thead><tr><th>Название</th><th>Контакт</th><th>Сумма</th><th>Статус</th><th></th></tr></thead>
@@ -269,7 +396,25 @@
       <div class="card">
         <div class="card-header">
           <h2>Все задачи</h2>
-          <button class="btn btn-primary" onclick="openModal('task')">+ Добавить</button>
+          <div class="export-btns">
+            <button class="btn-export" onclick="exportCSV('tasks')">CSV</button>
+            <button class="btn-export xlsx" onclick="exportXLSX('tasks')">Excel</button>
+            <button class="btn btn-primary" onclick="openModal('task')">+ Добавить</button>
+          </div>
+        </div>
+        <div class="search-bar">
+          <input type="text" id="search-tasks" placeholder="Поиск по описанию или контакту..." oninput="filterTasks()" />
+          <select id="filter-tasks-status" onchange="filterTasks()">
+            <option value="">Все статусы</option>
+            <option value="pending">В ожидании</option>
+            <option value="done">Выполнено</option>
+          </select>
+          <select id="filter-tasks-deadline" onchange="filterTasks()">
+            <option value="">Все дедлайны</option>
+            <option value="overdue">Просроченные</option>
+            <option value="today">Сегодня</option>
+            <option value="week">На этой неделе</option>
+          </select>
         </div>
         <table>
           <thead><tr><th>Описание</th><th>Контакт</th><th>Дедлайн</th><th>Статус</th><th></th></tr></thead>
@@ -286,7 +431,8 @@
             <div class="msg msg-assistant">Привет! Я ваш CRM-ассистент. Могу помочь с анализом контактов, сделок и задач. Спрашивайте!</div>
           </div>
           <div class="chat-input-row">
-            <input type="text" id="chat-input" placeholder="Напишите сообщение..." onkeydown="if(event.key==='Enter') sendMessage()" />
+            <button class="btn-mic" id="mic-btn" onclick="toggleMic()" title="Голосовой ввод">🎤</button>
+            <input type="text" id="chat-input" placeholder="Напишите или скажите что-нибудь..." onkeydown="if(event.key==='Enter') sendMessage()" />
             <button class="btn btn-primary" onclick="sendMessage()">Отправить</button>
           </div>
         </div>
@@ -360,17 +506,67 @@
 const API = 'http://localhost:3000';
 let contacts = [], deals = [], tasks = [];
 
-const tabs = { contacts: 'Контакты', deals: 'Сделки', tasks: 'Задачи', chat: 'AI Ассистент' };
+const tabs = { dashboard: 'Дашборд', contacts: 'Контакты', deals: 'Сделки', tasks: 'Задачи', chat: 'AI Ассистент' };
 
 function showTab(name) {
   Object.keys(tabs).forEach(t => {
-    document.getElementById('tab-' + t).style.display = t === name ? (t === 'chat' ? 'block' : 'block') : 'none';
+    document.getElementById('tab-' + t).style.display = t === name ? 'block' : 'none';
     document.querySelectorAll('.nav-item')[Object.keys(tabs).indexOf(t)].classList.toggle('active', t === name);
   });
   document.getElementById('topbar-title').textContent = tabs[name];
-  if (name === 'contacts') loadContacts();
-  if (name === 'deals') loadDeals();
-  if (name === 'tasks') loadTasks();
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'contacts')  loadContacts();
+  if (name === 'deals')     loadDeals();
+  if (name === 'tasks')     loadTasks();
+}
+
+let funnelChart = null, dealsChart = null;
+
+async function loadDashboard() {
+  const [c, d, t] = await Promise.all([
+    fetch(`${API}/contacts`).then(r => r.json()),
+    fetch(`${API}/deals`).then(r => r.json()),
+    fetch(`${API}/tasks`).then(r => r.json()),
+  ]);
+
+  document.getElementById('stat-contacts').textContent = c.length;
+  document.getElementById('stat-deals').textContent = d.length;
+
+  const revenue = d.filter(x => x.status === 'won').reduce((s, x) => s + (x.amount || 0), 0);
+  document.getElementById('stat-revenue').textContent = revenue.toLocaleString('ru') + ' ₽';
+
+  const done = t.filter(x => x.status === 'done').length;
+  document.getElementById('stat-tasks-done').textContent = `${done} / ${t.length}`;
+  document.getElementById('stat-tasks-sub').textContent = t.length ? `${Math.round(done/t.length*100)}% выполнено` : '';
+
+  // Funnel
+  const statuses = ['new', 'negotiation', 'won', 'lost'];
+  const labels   = ['Новые', 'Переговоры', 'Выиграны', 'Проиграны'];
+  const counts   = statuses.map(s => d.filter(x => x.status === s).length);
+  const colors   = ['#a5b4fc', '#6c63ff', '#4ade80', '#f87171'];
+
+  if (funnelChart) funnelChart.destroy();
+  funnelChart = new Chart(document.getElementById('chart-funnel'), {
+    type: 'bar',
+    data: { labels, datasets: [{ data: counts, backgroundColor: colors, borderRadius: 6 }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } },
+  });
+
+  // Deals by amount
+  const topDeals = [...d].sort((a, b) => (b.amount || 0) - (a.amount || 0)).slice(0, 6);
+  if (dealsChart) dealsChart.destroy();
+  dealsChart = new Chart(document.getElementById('chart-deals'), {
+    type: 'bar',
+    data: {
+      labels: topDeals.map(x => x.title.length > 20 ? x.title.slice(0, 20) + '…' : x.title),
+      datasets: [{ data: topDeals.map(x => x.amount || 0), backgroundColor: '#6c63ff', borderRadius: 6 }],
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: { x: { beginAtZero: true } },
+    },
+  });
 }
 
 function badge(status) {
@@ -383,18 +579,7 @@ function badge(status) {
 // --- Contacts ---
 async function loadContacts() {
   contacts = await fetch(`${API}/contacts`).then(r => r.json());
-  const tbody = document.getElementById('contacts-body');
-  tbody.innerHTML = contacts.length ? contacts.map(c => `
-    <tr>
-      <td>${c.name}</td>
-      <td>${c.email || '—'}</td>
-      <td>${c.phone || '—'}</td>
-      <td>${c.company || '—'}</td>
-      <td style="display:flex;gap:6px">
-        <button class="btn btn-edit" onclick="editContact(${c.id})">Изменить</button>
-        <button class="btn btn-danger" onclick="deleteContact(${c.id})">Удалить</button>
-      </td>
-    </tr>`).join('') : '<tr><td colspan="5" class="empty">Нет контактов</td></tr>';
+  renderContacts(contacts);
 }
 
 function openModal(type) {
@@ -458,18 +643,7 @@ async function deleteContact(id) {
 // --- Deals ---
 async function loadDeals() {
   deals = await fetch(`${API}/deals`).then(r => r.json());
-  const tbody = document.getElementById('deals-body');
-  tbody.innerHTML = deals.length ? deals.map(d => `
-    <tr>
-      <td>${d.title}</td>
-      <td>${d.contact_name || '—'}</td>
-      <td>${d.amount ? d.amount.toLocaleString('ru') + ' ₽' : '—'}</td>
-      <td>${badge(d.status)}</td>
-      <td style="display:flex;gap:6px">
-        <button class="btn btn-edit" onclick="editDeal(${d.id})">Изменить</button>
-        <button class="btn btn-danger" onclick="deleteDeal(${d.id})">Удалить</button>
-      </td>
-    </tr>`).join('') : '<tr><td colspan="5" class="empty">Нет сделок</td></tr>';
+  renderDeals(deals);
 }
 
 function populateContactSelects() {
@@ -513,18 +687,19 @@ async function deleteDeal(id) {
 // --- Tasks ---
 async function loadTasks() {
   tasks = await fetch(`${API}/tasks`).then(r => r.json());
-  const tbody = document.getElementById('tasks-body');
-  tbody.innerHTML = tasks.length ? tasks.map(t => `
-    <tr>
-      <td>${t.description}</td>
-      <td>${t.contact_name || '—'}</td>
-      <td>${t.deadline ? new Date(t.deadline).toLocaleString('ru') : '—'}</td>
-      <td>${badge(t.status)}</td>
-      <td style="display:flex;gap:6px">
-        <button class="btn btn-edit" onclick="editTask(${t.id})">Изменить</button>
-        <button class="btn btn-danger" onclick="deleteTask(${t.id})">Удалить</button>
-      </td>
-    </tr>`).join('') : '<tr><td colspan="5" class="empty">Нет задач</td></tr>';
+  renderTasks(tasks);
+  updateOverdueBadge();
+}
+
+function updateOverdueBadge() {
+  const now = new Date();
+  const overdue = tasks.filter(t => t.status !== 'done' && t.deadline && new Date(t.deadline) < now);
+  const nav = document.getElementById('nav-tasks');
+  const existing = nav.querySelector('.nav-badge');
+  if (existing) existing.remove();
+  if (overdue.length) {
+    nav.insertAdjacentHTML('beforeend', `<span class="nav-badge">${overdue.length}</span>`);
+  }
 }
 
 async function saveTask() {
@@ -577,6 +752,7 @@ async function sendMessage() {
   const data = await res.json();
   loading.remove();
   appendMsg('assistant', data.reply);
+  speak(data.reply);
 
   if (data.toolsUsed && data.toolsUsed.length > 0) {
     const affected = new Set(data.toolsUsed.map(t => t.replace(/_(contact|deal|task)$/, '').replace(/^(create|update|delete)_/, '')));
@@ -600,8 +776,230 @@ function appendMsg(role, text, loading = false) {
   return el;
 }
 
+// --- Search & Filter ---
+
+function renderContacts(list) {
+  const tbody = document.getElementById('contacts-body');
+  tbody.innerHTML = list.length ? list.map(c => `
+    <tr>
+      <td>${c.name}</td>
+      <td>${c.email || '—'}</td>
+      <td>${c.phone || '—'}</td>
+      <td>${c.company || '—'}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-edit" onclick="editContact(${c.id})">Изменить</button>
+        <button class="btn btn-danger" onclick="deleteContact(${c.id})">Удалить</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="5" class="empty">Ничего не найдено</td></tr>';
+}
+
+function filterContacts() {
+  const q = document.getElementById('search-contacts').value.toLowerCase();
+  renderContacts(contacts.filter(c =>
+    [c.name, c.email, c.phone, c.company].some(v => (v || '').toLowerCase().includes(q))
+  ));
+}
+
+function renderDeals(list) {
+  const tbody = document.getElementById('deals-body');
+  tbody.innerHTML = list.length ? list.map(d => `
+    <tr>
+      <td>${d.title}</td>
+      <td>${d.contact_name || '—'}</td>
+      <td>${d.amount ? d.amount.toLocaleString('ru') + ' ₽' : '—'}</td>
+      <td>${badge(d.status)}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-edit" onclick="editDeal(${d.id})">Изменить</button>
+        <button class="btn btn-danger" onclick="deleteDeal(${d.id})">Удалить</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="5" class="empty">Ничего не найдено</td></tr>';
+}
+
+function filterDeals() {
+  const q      = document.getElementById('search-deals').value.toLowerCase();
+  const status = document.getElementById('filter-deals-status').value;
+  renderDeals(deals.filter(d => {
+    const matchQ = [d.title, d.contact_name].some(v => (v || '').toLowerCase().includes(q));
+    const matchS = !status || d.status === status;
+    return matchQ && matchS;
+  }));
+}
+
+function renderTasks(list) {
+  const now = new Date();
+  const tbody = document.getElementById('tasks-body');
+  tbody.innerHTML = list.length ? list.map(t => {
+    const overdue = t.status !== 'done' && t.deadline && new Date(t.deadline) < now;
+    return `
+    <tr class="${overdue ? 'row-overdue' : ''}">
+      <td>${t.description}${overdue ? ' <span style="color:#ff6b6b;font-size:12px">просрочено</span>' : ''}</td>
+      <td>${t.contact_name || '—'}</td>
+      <td>${t.deadline ? new Date(t.deadline).toLocaleString('ru') : '—'}</td>
+      <td>${badge(t.status)}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-edit" onclick="editTask(${t.id})">Изменить</button>
+        <button class="btn btn-danger" onclick="deleteTask(${t.id})">Удалить</button>
+      </td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="5" class="empty">Ничего не найдено</td></tr>';
+}
+
+function filterTasks() {
+  const q        = document.getElementById('search-tasks').value.toLowerCase();
+  const status   = document.getElementById('filter-tasks-status').value;
+  const deadline = document.getElementById('filter-tasks-deadline').value;
+  const now      = new Date();
+  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+  const weekEnd  = new Date(todayEnd); weekEnd.setDate(weekEnd.getDate() + 7);
+
+  renderTasks(tasks.filter(t => {
+    const matchQ = [t.description, t.contact_name].some(v => (v || '').toLowerCase().includes(q));
+    const matchS = !status || t.status === status;
+    let matchD = true;
+    if (deadline && t.deadline) {
+      const dl = new Date(t.deadline);
+      if (deadline === 'overdue') matchD = t.status !== 'done' && dl < now;
+      if (deadline === 'today')   matchD = dl <= todayEnd && dl >= new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      if (deadline === 'week')    matchD = dl <= weekEnd && dl >= now;
+    } else if (deadline) {
+      matchD = false;
+    }
+    return matchQ && matchS && matchD;
+  }));
+}
+
+// --- Export ---
+
+const exportColumns = {
+  contacts: { Имя: 'name', Email: 'email', Телефон: 'phone', Компания: 'company', Дата: 'created_at' },
+  deals:    { Название: 'title', Контакт: 'contact_name', Сумма: 'amount', Статус: 'status', Дата: 'created_at' },
+  tasks:    { Описание: 'description', Контакт: 'contact_name', Дедлайн: 'deadline', Статус: 'status', Дата: 'created_at' },
+};
+
+function getExportData(type) {
+  const cols = exportColumns[type];
+  const src  = type === 'contacts' ? contacts : type === 'deals' ? deals : tasks;
+  return src.map(row => {
+    const out = {};
+    Object.entries(cols).forEach(([label, key]) => out[label] = row[key] ?? '');
+    return out;
+  });
+}
+
+function exportCSV(type) {
+  const data = getExportData(type);
+  if (!data.length) return alert('Нет данных для экспорта');
+  const headers = Object.keys(data[0]);
+  const rows = data.map(r => headers.map(h => `"${String(r[h]).replace(/"/g, '""')}"`).join(';'));
+  const csv = '﻿' + [headers.join(';'), ...rows].join('\n');
+  download(csv, `${type}.csv`, 'text/csv;charset=utf-8');
+}
+
+function exportXLSX(type) {
+  const data = getExportData(type);
+  if (!data.length) return alert('Нет данных для экспорта');
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, type);
+  XLSX.writeFile(wb, `${type}.xlsx`);
+}
+
+function download(content, filename, mime) {
+  const blob = new Blob([content], { type: mime });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+// --- Voice ---
+
+let recognition = null;
+let isRecording = false;
+
+function initRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) { alert('Ваш браузер не поддерживает распознавание речи. Используйте Chrome или Edge.'); return null; }
+  const r = new SpeechRecognition();
+  r.lang = 'ru-RU';
+  r.interimResults = false;
+  r.maxAlternatives = 1;
+  r.onresult = (e) => {
+    const text = e.results[0][0].transcript;
+    document.getElementById('chat-input').value = text;
+    stopRecording();
+    sendMessage();
+  };
+  r.onerror = () => stopRecording();
+  r.onend = () => stopRecording();
+  return r;
+}
+
+function toggleMic() {
+  if (isRecording) { stopRecording(); return; }
+  if (!recognition) recognition = initRecognition();
+  if (!recognition) return;
+  recognition.start();
+  isRecording = true;
+  const btn = document.getElementById('mic-btn');
+  btn.classList.add('recording');
+  btn.title = 'Остановить запись';
+}
+
+function stopRecording() {
+  isRecording = false;
+  const btn = document.getElementById('mic-btn');
+  btn.classList.remove('recording');
+  btn.title = 'Голосовой ввод';
+  try { recognition?.stop(); } catch {}
+}
+
+function speak(text) {
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'ru-RU';
+  utterance.rate = 1.05;
+  const voices = window.speechSynthesis.getVoices();
+  const ruVoice = voices.find(v => v.lang.startsWith('ru'));
+  if (ruVoice) utterance.voice = ruVoice;
+  window.speechSynthesis.speak(utterance);
+}
+
+// --- Notifications ---
+
+async function requestNotifications() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') await Notification.requestPermission();
+}
+
+async function checkDeadlines() {
+  if (Notification.permission !== 'granted') return;
+  const data = await fetch(`${API}/tasks`).then(r => r.json());
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+
+  data.forEach(t => {
+    if (t.status === 'done' || !t.deadline) return;
+    const dl = new Date(t.deadline);
+    if (dl < now) {
+      new Notification('Просроченная задача', {
+        body: `${t.description}${t.contact_name ? ' — ' + t.contact_name : ''}`,
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⚠️</text></svg>',
+      });
+    } else if (dl >= today && dl < tomorrow) {
+      new Notification('Задача на сегодня', {
+        body: `${t.description}${t.contact_name ? ' — ' + t.contact_name : ''}\nДедлайн: ${dl.toLocaleTimeString('ru', {hour:'2-digit', minute:'2-digit'})}`,
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔔</text></svg>',
+      });
+    }
+  });
+}
+
 // Init
-loadContacts();
+showTab('dashboard');
+requestNotifications().then(checkDeadlines);
+setInterval(checkDeadlines, 60 * 60 * 1000);
 </script>
 </body>
 </html>
