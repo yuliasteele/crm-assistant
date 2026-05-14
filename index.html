@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="google" content="notranslate" />
   <title>CRM Assistant</title>
+  <script>if (localStorage.getItem('crm_dark') === '1') document.documentElement.classList.add('dark-init');</script>
+  <style>.dark-init body { background: #111827; }</style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
   <style>
@@ -459,6 +461,116 @@
     .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 150; }
     .sidebar-overlay.show { display: block; }
 
+    /* ── Dark mode ── */
+    body.dark {
+      background: #111827; color: #f9fafb; color-scheme: dark;
+    }
+    body.dark .topbar    { background: #1f2937; border-color: #374151; }
+    body.dark .topbar span, body.dark #topbar-title { color: #f9fafb; }
+    body.dark .hamburger span { background: #f9fafb; }
+
+    body.dark .nav-item:hover  { background: #0d1220; }
+    body.dark .nav-item.active { background: #0d1220; }
+    body.dark .sidebar { background: #13131f; }
+    body.dark .sidebar h1 { border-color: #1f2937; }
+
+    body.dark .card       { background: #1f2937; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+    body.dark .card-header h2 { color: #f9fafb; }
+    body.dark .stat-card  { background: #1f2937; }
+    body.dark .chart-card { background: #1f2937; }
+    body.dark .stat-card .label { color: #9ca3af; }
+    body.dark .stat-card .value { color: #f9fafb; }
+    body.dark .stat-card .sub   { color: #6b7280; }
+    body.dark .chart-card h3    { color: #f9fafb; }
+
+    body.dark th { background: #111827; color: #9ca3af; }
+    body.dark td { border-color: #374151; color: #f9fafb; }
+    body.dark tr:hover td { background: #111827; }
+    body.dark .row-overdue td { background: #2d1515 !important; }
+    body.dark .empty { color: #6b7280; }
+
+    body.dark .search-bar input,
+    body.dark .search-bar select { background: #111827; border-color: #374151; color: #f9fafb; }
+    body.dark .search-bar input:focus,
+    body.dark .search-bar select:focus { background: #111827; border-color: #6c63ff; }
+
+    body.dark .modal          { background: #1f2937; }
+    body.dark .modal h3       { color: #f9fafb; }
+    body.dark .modal-overlay  { background: rgba(0,0,0,0.65); }
+    body.dark .form-group label { color: #d1d5db; }
+    body.dark .form-group input,
+    body.dark .form-group select { background: #111827; border-color: #374151; color: #f9fafb; }
+    body.dark .form-group input:focus,
+    body.dark .form-group select:focus { background: #111827; border-color: #6c63ff; }
+
+    body.dark .btn-edit   { background: #374151; color: #d1d5db; }
+    body.dark .btn-cancel { background: #374151; color: #d1d5db; }
+    body.dark .btn-export { background: #374151; color: #d1d5db; }
+    body.dark .btn-export:hover { background: #4b5563; }
+    body.dark .btn-export.xlsx  { background: #14532d; color: #86efac; }
+    body.dark .btn-mic    { background: #374151; color: #d1d5db; }
+    body.dark .btn-mic:hover { background: #4b5563; }
+    body.dark .btn-view   { background: #374151; color: #d1d5db; }
+    body.dark .btn-view.active { background: #6c63ff; color: #fff; }
+    body.dark .btn-filter { background: #374151; color: #d1d5db; }
+    body.dark .btn-filter.active { background: #6c63ff; color: #fff; }
+
+    body.dark .chat-input-row input { background: #111827; border-color: #374151; color: #f9fafb; }
+    body.dark .chat-input-row input:focus { border-color: #6c63ff; }
+    body.dark .msg-assistant { background: #1f2937; color: #f9fafb; box-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+
+    body.dark .kanban-col   { background: #111827; }
+    body.dark .kanban-col-header { color: #9ca3af; }
+    body.dark .kanban-col-count  { background: #374151; color: #d1d5db; }
+    body.dark .kanban-card  { background: #1f2937; box-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+    body.dark .kanban-card-title a { color: #f9fafb; }
+    body.dark .kanban-card-contact { color: #9ca3af; }
+    body.dark .kanban-cards.drag-over { background: #1a1f35; }
+
+    body.dark .profile-section    { background: #1f2937; }
+    body.dark .profile-section h3 { color: #f9fafb; }
+    body.dark .profile-info-item  { background: #1f2937; }
+    body.dark .profile-info-item .label { color: #9ca3af; }
+    body.dark .profile-info-item .value { color: #f9fafb; }
+    body.dark .profile-name    { color: #f9fafb; }
+    body.dark .profile-company { color: #9ca3af; }
+    body.dark .profile-empty   { color: #6b7280; }
+    body.dark .profile-back    { color: #a89fff; }
+
+    body.dark .note-content { color: #f9fafb; }
+    body.dark .note-meta    { color: #6b7280; }
+    body.dark .note-item    { border-color: #374151; }
+    body.dark .note-add textarea { background: #111827; border-color: #374151; color: #f9fafb; }
+    body.dark .note-add textarea:focus { border-color: #6c63ff; }
+
+    body.dark .activity-item { border-color: #374151; }
+    body.dark .activity-text { color: #f9fafb; }
+    body.dark .activity-time { color: #6b7280; }
+
+    body.dark .tag-manager-row input { background: #111827; border-color: #374151; color: #f9fafb; }
+    body.dark .tag-add-select { background: #111827; border-color: #374151; color: #f9fafb; }
+
+    body.dark .drop-zone { border-color: #374151; color: #9ca3af; }
+    body.dark .drop-zone:hover, body.dark .drop-zone.drag-active { border-color: #6c63ff; background: #1a1f35; color: #a89fff; }
+    body.dark .import-preview { border-color: #374151; }
+    body.dark .import-preview th { background: #111827; }
+    body.dark td { color: #f9fafb; }
+
+    body.dark .user-dropdown { background: #1f2937; box-shadow: 0 6px 24px rgba(0,0,0,0.5); }
+    body.dark .user-dropdown-header { border-color: #374151; }
+    body.dark .user-dropdown-name   { color: #f9fafb; }
+    body.dark .user-dropdown-item   { color: #d1d5db; }
+    body.dark .user-dropdown-item:hover { background: #111827; }
+    body.dark .user-dropdown-item.danger { color: #f87171; }
+    body.dark .dropdown-divider { border-color: #374151; }
+
+    body.dark .login-card { background: #1f2937; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+    body.dark .login-card h1 { color: #f9fafb; }
+    body.dark .login-card p  { color: #9ca3af; }
+    body.dark .login-screen  { background: #111827; }
+
+    body.dark .sidebar-overlay { background: rgba(0,0,0,0.55); }
+
     /* ── Tablet (≤ 768px) ── */
     @media (max-width: 768px) {
       body { overflow: auto; flex-direction: column; height: auto; }
@@ -547,6 +659,7 @@
           <div class="user-dropdown-sub"><span class="role-badge" id="dropdown-role"></span></div>
         </div>
         <div class="user-dropdown-item" onclick="openChangePassword();closeUserMenu()">🔑 Change password</div>
+        <div class="user-dropdown-item" id="dark-toggle-btn" onclick="toggleDarkMode()">🌙 Dark mode</div>
         <hr class="dropdown-divider">
         <div class="user-dropdown-item danger" onclick="logout()">Sign out</div>
       </div>
@@ -1916,6 +2029,20 @@ async function checkDeadlines() {
   });
 }
 
+// --- Dark mode ---
+
+function applyDarkMode(dark) {
+  document.body.classList.toggle('dark', dark);
+  localStorage.setItem('crm_dark', dark ? '1' : '0');
+  const btn = document.getElementById('dark-toggle-btn');
+  if (btn) btn.textContent = dark ? '☀️ Light mode' : '🌙 Dark mode';
+}
+
+function toggleDarkMode() {
+  applyDarkMode(!document.body.classList.contains('dark'));
+  closeUserMenu();
+}
+
 // --- Users ---
 
 function decodeToken() {
@@ -2367,6 +2494,8 @@ async function confirmImport() {
 
 // Init
 setInterval(checkDeadlines, 60 * 60 * 1000);
+if (localStorage.getItem('crm_dark') === '1') applyDarkMode(true);
+
 if (getToken()) {
   applyUserSession();
   loadAllTags().then(populateTagFilters);
