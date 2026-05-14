@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CRM Ассистент</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 220px;
+      background: #1a1a2e;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      flex-shrink: 0;
+    }
+
+    .sidebar h1 {
+      font-size: 18px;
+      font-weight: 700;
+      padding: 0 20px 24px;
+      border-bottom: 1px solid #2e2e4d;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-item {
+      padding: 14px 20px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .nav-item:hover { background: #2e2e4d; }
+    .nav-item.active { background: #2e2e4d; border-left-color: #6c63ff; color: #a89fff; }
+
+    /* Main */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .topbar {
+      background: #fff;
+      padding: 16px 28px;
+      font-size: 20px;
+      font-weight: 600;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px;
+    }
+
+    /* Cards / Table */
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .card-header h2 { font-size: 16px; font-weight: 600; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { text-align: left; padding: 10px 12px; background: #f7f7fb; color: #666; font-weight: 500; }
+    td { padding: 10px 12px; border-top: 1px solid #f0f0f0; }
+    tr:hover td { background: #fafafa; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .badge-new { background: #e8f0fe; color: #3b5bdb; }
+    .badge-won { background: #d3f9d8; color: #2f9e44; }
+    .badge-lost { background: #ffe3e3; color: #c92a2a; }
+    .badge-pending { background: #fff3bf; color: #e67700; }
+    .badge-done { background: #d3f9d8; color: #2f9e44; }
+    .badge-negotiation { background: #f3d9fa; color: #862e9c; }
+
+    /* Buttons */
+    .btn {
+      padding: 8px 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: #6c63ff; color: #fff; }
+    .btn-danger { background: #ff6b6b; color: #fff; padding: 5px 12px; font-size: 12px; }
+    .btn-edit { background: #f0f0f0; color: #333; padding: 5px 12px; font-size: 12px; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #fff;
+      border-radius: 14px;
+      padding: 28px;
+      width: 420px;
+      max-width: 95vw;
+    }
+
+    .modal h3 { margin-bottom: 20px; font-size: 17px; }
+
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 13px; color: #555; margin-bottom: 5px; }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus { border-color: #6c63ff; }
+
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    .btn-cancel { background: #f0f0f0; color: #333; }
+
+    /* Chat */
+    .chat-wrap {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-bottom: 12px;
+    }
+
+    .msg {
+      max-width: 70%;
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .msg-user { background: #6c63ff; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .msg-assistant { background: #fff; color: #1a1a2e; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .msg-loading { opacity: 0.5; font-style: italic; }
+
+    .chat-input-row {
+      display: flex;
+      gap: 10px;
+      padding-top: 16px;
+      border-top: 1px solid #e0e0e0;
+      margin-top: 16px;
+    }
+
+    .chat-input-row input {
+      flex: 1;
+      padding: 11px 16px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .chat-input-row input:focus { border-color: #6c63ff; }
+
+    .empty { color: #aaa; font-size: 14px; text-align: center; padding: 40px 0; }
+  </style>
+</head>
+<body>
+
+<div class="sidebar">
+  <h1>CRM Ассистент</h1>
+  <div class="nav-item active" onclick="showTab('contacts')">Контакты</div>
+  <div class="nav-item" onclick="showTab('deals')">Сделки</div>
+  <div class="nav-item" onclick="showTab('tasks')">Задачи</div>
+  <div class="nav-item" onclick="showTab('chat')">AI Ассистент</div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <span id="topbar-title">Контакты</span>
+  </div>
+
+  <div class="content">
+
+    <!-- Contacts -->
+    <div id="tab-contacts">
+      <div class="card">
+        <div class="card-header">
+          <h2>Все контакты</h2>
+          <button class="btn btn-primary" onclick="openModal('contact')">+ Добавить</button>
+        </div>
+        <table>
+          <thead><tr><th>Имя</th><th>Email</th><th>Телефон</th><th>Компания</th><th></th></tr></thead>
+          <tbody id="contacts-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Deals -->
+    <div id="tab-deals" style="display:none">
+      <div class="card">
+        <div class="card-header">
+          <h2>Все сделки</h2>
+          <button class="btn btn-primary" onclick="openModal('deal')">+ Добавить</button>
+        </div>
+        <table>
+          <thead><tr><th>Название</th><th>Контакт</th><th>Сумма</th><th>Статус</th><th></th></tr></thead>
+          <tbody id="deals-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tasks -->
+    <div id="tab-tasks" style="display:none">
+      <div class="card">
+        <div class="card-header">
+          <h2>Все задачи</h2>
+          <button class="btn btn-primary" onclick="openModal('task')">+ Добавить</button>
+        </div>
+        <table>
+          <thead><tr><th>Описание</th><th>Контакт</th><th>Дедлайн</th><th>Статус</th><th></th></tr></thead>
+          <tbody id="tasks-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Chat -->
+    <div id="tab-chat" style="display:none; height: calc(100vh - 130px);">
+      <div class="card" style="height:100%; display:flex; flex-direction:column;">
+        <div class="chat-wrap">
+          <div class="chat-messages" id="chat-messages">
+            <div class="msg msg-assistant">Привет! Я ваш CRM-ассистент. Могу помочь с анализом контактов, сделок и задач. Спрашивайте!</div>
+          </div>
+          <div class="chat-input-row">
+            <input type="text" id="chat-input" placeholder="Напишите сообщение..." onkeydown="if(event.key==='Enter') sendMessage()" />
+            <button class="btn btn-primary" onclick="sendMessage()">Отправить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal: Contact -->
+<div class="modal-overlay" id="modal-contact">
+  <div class="modal">
+    <h3 id="modal-contact-title">Новый контакт</h3>
+    <input type="hidden" id="contact-id" />
+    <div class="form-group"><label>Имя</label><input type="text" id="contact-name" /></div>
+    <div class="form-group"><label>Email</label><input type="email" id="contact-email" /></div>
+    <div class="form-group"><label>Телефон</label><input type="text" id="contact-phone" /></div>
+    <div class="form-group"><label>Компания</label><input type="text" id="contact-company" /></div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('contact')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveContact()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Deal -->
+<div class="modal-overlay" id="modal-deal">
+  <div class="modal">
+    <h3 id="modal-deal-title">Новая сделка</h3>
+    <input type="hidden" id="deal-id" />
+    <div class="form-group"><label>Название</label><input type="text" id="deal-title" /></div>
+    <div class="form-group"><label>Контакт</label><select id="deal-contact"></select></div>
+    <div class="form-group"><label>Сумма (₽)</label><input type="number" id="deal-amount" /></div>
+    <div class="form-group"><label>Статус</label>
+      <select id="deal-status">
+        <option value="new">Новая</option>
+        <option value="negotiation">Переговоры</option>
+        <option value="won">Выиграна</option>
+        <option value="lost">Проиграна</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('deal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveDeal()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Task -->
+<div class="modal-overlay" id="modal-task">
+  <div class="modal">
+    <h3 id="modal-task-title">Новая задача</h3>
+    <input type="hidden" id="task-id" />
+    <div class="form-group"><label>Описание</label><input type="text" id="task-description" /></div>
+    <div class="form-group"><label>Контакт</label><select id="task-contact"></select></div>
+    <div class="form-group"><label>Дедлайн</label><input type="datetime-local" id="task-deadline" /></div>
+    <div class="form-group"><label>Статус</label>
+      <select id="task-status">
+        <option value="pending">В ожидании</option>
+        <option value="done">Выполнено</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('task')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveTask()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:3000';
+let contacts = [], deals = [], tasks = [];
+
+const tabs = { contacts: 'Контакты', deals: 'Сделки', tasks: 'Задачи', chat: 'AI Ассистент' };
+
+function showTab(name) {
+  Object.keys(tabs).forEach(t => {
+    document.getElementById('tab-' + t).style.display = t === name ? (t === 'chat' ? 'block' : 'block') : 'none';
+    document.querySelectorAll('.nav-item')[Object.keys(tabs).indexOf(t)].classList.toggle('active', t === name);
+  });
+  document.getElementById('topbar-title').textContent = tabs[name];
+  if (name === 'contacts') loadContacts();
+  if (name === 'deals') loadDeals();
+  if (name === 'tasks') loadTasks();
+}
+
+function badge(status) {
+  const map = { new: ['badge-new','Новая'], won: ['badge-won','Выиграна'], lost: ['badge-lost','Проиграна'],
+    negotiation: ['badge-negotiation','Переговоры'], pending: ['badge-pending','В ожидании'], done: ['badge-done','Выполнено'] };
+  const [cls, label] = map[status] || ['badge-new', status];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+// --- Contacts ---
+async function loadContacts() {
+  contacts = await fetch(`${API}/contacts`).then(r => r.json());
+  const tbody = document.getElementById('contacts-body');
+  tbody.innerHTML = contacts.length ? contacts.map(c => `
+    <tr>
+      <td>${c.name}</td>
+      <td>${c.email || '—'}</td>
+      <td>${c.phone || '—'}</td>
+      <td>${c.company || '—'}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-edit" onclick="editContact(${c.id})">Изменить</button>
+        <button class="btn btn-danger" onclick="deleteContact(${c.id})">Удалить</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="5" class="empty">Нет контактов</td></tr>';
+}
+
+function openModal(type) {
+  if (type === 'deal' || type === 'task') populateContactSelects();
+  document.getElementById(`modal-${type}`).classList.add('open');
+}
+
+function closeModal(type) {
+  document.getElementById(`modal-${type}`).classList.remove('open');
+  clearForm(type);
+}
+
+function clearForm(type) {
+  if (type === 'contact') {
+    ['contact-id','contact-name','contact-email','contact-phone','contact-company'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('modal-contact-title').textContent = 'Новый контакт';
+  }
+  if (type === 'deal') {
+    ['deal-id','deal-title','deal-amount'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('deal-status').value = 'new';
+    document.getElementById('modal-deal-title').textContent = 'Новая сделка';
+  }
+  if (type === 'task') {
+    ['task-id','task-description','task-deadline'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('task-status').value = 'pending';
+    document.getElementById('modal-task-title').textContent = 'Новая задача';
+  }
+}
+
+async function saveContact() {
+  const id = document.getElementById('contact-id').value;
+  const body = {
+    name: document.getElementById('contact-name').value,
+    email: document.getElementById('contact-email').value,
+    phone: document.getElementById('contact-phone').value,
+    company: document.getElementById('contact-company').value,
+  };
+  if (id) await fetch(`${API}/contacts/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  else await fetch(`${API}/contacts`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  closeModal('contact');
+  loadContacts();
+}
+
+function editContact(id) {
+  const c = contacts.find(x => x.id === id);
+  document.getElementById('contact-id').value = c.id;
+  document.getElementById('contact-name').value = c.name;
+  document.getElementById('contact-email').value = c.email || '';
+  document.getElementById('contact-phone').value = c.phone || '';
+  document.getElementById('contact-company').value = c.company || '';
+  document.getElementById('modal-contact-title').textContent = 'Изменить контакт';
+  openModal('contact');
+}
+
+async function deleteContact(id) {
+  if (!confirm('Удалить контакт?')) return;
+  await fetch(`${API}/contacts/${id}`, { method: 'DELETE' });
+  loadContacts();
+}
+
+// --- Deals ---
+async function loadDeals() {
+  deals = await fetch(`${API}/deals`).then(r => r.json());
+  const tbody = document.getElementById('deals-body');
+  tbody.innerHTML = deals.length ? deals.map(d => `
+    <tr>
+      <td>${d.title}</td>
+      <td>${d.contact_name || '—'}</td>
+      <td>${d.amount ? d.amount.toLocaleString('ru') + ' ₽' : '—'}</td>
+      <td>${badge(d.status)}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-edit" onclick="editDeal(${d.id})">Изменить</button>
+        <button class="btn btn-danger" onclick="deleteDeal(${d.id})">Удалить</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="5" class="empty">Нет сделок</td></tr>';
+}
+
+function populateContactSelects() {
+  const opts = `<option value="">— без контакта —</option>` + contacts.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  document.getElementById('deal-contact').innerHTML = opts;
+  document.getElementById('task-contact').innerHTML = opts;
+}
+
+async function saveDeal() {
+  const id = document.getElementById('deal-id').value;
+  const body = {
+    title: document.getElementById('deal-title').value,
+    amount: parseFloat(document.getElementById('deal-amount').value) || null,
+    status: document.getElementById('deal-status').value,
+    contact_id: document.getElementById('deal-contact').value || null,
+  };
+  if (id) await fetch(`${API}/deals/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  else await fetch(`${API}/deals`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  closeModal('deal');
+  loadDeals();
+}
+
+function editDeal(id) {
+  const d = deals.find(x => x.id === id);
+  populateContactSelects();
+  document.getElementById('deal-id').value = d.id;
+  document.getElementById('deal-title').value = d.title;
+  document.getElementById('deal-amount').value = d.amount || '';
+  document.getElementById('deal-status').value = d.status;
+  document.getElementById('deal-contact').value = d.contact_id || '';
+  document.getElementById('modal-deal-title').textContent = 'Изменить сделку';
+  document.getElementById('modal-deal').classList.add('open');
+}
+
+async function deleteDeal(id) {
+  if (!confirm('Удалить сделку?')) return;
+  await fetch(`${API}/deals/${id}`, { method: 'DELETE' });
+  loadDeals();
+}
+
+// --- Tasks ---
+async function loadTasks() {
+  tasks = await fetch(`${API}/tasks`).then(r => r.json());
+  const tbody = document.getElementById('tasks-body');
+  tbody.innerHTML = tasks.length ? tasks.map(t => `
+    <tr>
+      <td>${t.description}</td>
+      <td>${t.contact_name || '—'}</td>
+      <td>${t.deadline ? new Date(t.deadline).toLocaleString('ru') : '—'}</td>
+      <td>${badge(t.status)}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-edit" onclick="editTask(${t.id})">Изменить</button>
+        <button class="btn btn-danger" onclick="deleteTask(${t.id})">Удалить</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="5" class="empty">Нет задач</td></tr>';
+}
+
+async function saveTask() {
+  const id = document.getElementById('task-id').value;
+  const body = {
+    description: document.getElementById('task-description').value,
+    deadline: document.getElementById('task-deadline').value || null,
+    status: document.getElementById('task-status').value,
+    contact_id: document.getElementById('task-contact').value || null,
+  };
+  if (id) await fetch(`${API}/tasks/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  else await fetch(`${API}/tasks`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  closeModal('task');
+  loadTasks();
+}
+
+function editTask(id) {
+  const t = tasks.find(x => x.id === id);
+  populateContactSelects();
+  document.getElementById('task-id').value = t.id;
+  document.getElementById('task-description').value = t.description;
+  document.getElementById('task-deadline').value = t.deadline ? t.deadline.slice(0,16) : '';
+  document.getElementById('task-status').value = t.status;
+  document.getElementById('task-contact').value = t.contact_id || '';
+  document.getElementById('modal-task-title').textContent = 'Изменить задачу';
+  document.getElementById('modal-task').classList.add('open');
+}
+
+async function deleteTask(id) {
+  if (!confirm('Удалить задачу?')) return;
+  await fetch(`${API}/tasks/${id}`, { method: 'DELETE' });
+  loadTasks();
+}
+
+// --- Chat ---
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  appendMsg('user', text);
+  const loading = appendMsg('assistant', 'Печатает...', true);
+
+  const res = await fetch(`${API}/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: text })
+  });
+  const data = await res.json();
+  loading.remove();
+  appendMsg('assistant', data.reply);
+
+  if (data.toolsUsed && data.toolsUsed.length > 0) {
+    const affected = new Set(data.toolsUsed.map(t => t.replace(/_(contact|deal|task)$/, '').replace(/^(create|update|delete)_/, '')));
+    if (affected.has('contact')) { contacts = await fetch(`${API}/contacts`).then(r => r.json()); }
+    if (affected.has('deal'))    { deals    = await fetch(`${API}/deals`).then(r => r.json()); }
+    if (affected.has('task'))    { tasks    = await fetch(`${API}/tasks`).then(r => r.json()); }
+    const currentTab = document.querySelector('.nav-item.active')?.textContent;
+    if (currentTab === 'Контакты') loadContacts();
+    if (currentTab === 'Сделки')   loadDeals();
+    if (currentTab === 'Задачи')   loadTasks();
+  }
+}
+
+function appendMsg(role, text, loading = false) {
+  const el = document.createElement('div');
+  el.className = `msg msg-${role}${loading ? ' msg-loading' : ''}`;
+  el.textContent = text;
+  const container = document.getElementById('chat-messages');
+  container.appendChild(el);
+  container.scrollTop = container.scrollHeight;
+  return el;
+}
+
+// Init
+loadContacts();
+</script>
+</body>
+</html>
