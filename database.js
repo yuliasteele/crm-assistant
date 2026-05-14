@@ -37,6 +37,14 @@ db.exec(`
     contact_id INTEGER REFERENCES contacts(id),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
+
+  CREATE TABLE IF NOT EXISTS notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    content TEXT NOT NULL,
+    contact_id INTEGER REFERENCES contacts(id) ON DELETE CASCADE,
+    deal_id INTEGER REFERENCES deals(id) ON DELETE CASCADE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 
 module.exports = db;

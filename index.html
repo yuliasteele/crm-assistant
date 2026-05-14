@@ -308,6 +308,81 @@
     .btn-mic:hover { background: #e0e0e0; }
     .btn-mic.recording { background: #ff6b6b; color: #fff; animation: pulse 1s infinite; }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+    /* Login */
+    .login-screen {
+      position: fixed; inset: 0; background: #f0f2f5;
+      display: flex; align-items: center; justify-content: center; z-index: 999;
+    }
+    .login-card {
+      background: #fff; border-radius: 16px; padding: 40px 44px;
+      width: 380px; box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    }
+    .login-card h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .login-card p { color: #888; font-size: 14px; margin-bottom: 28px; }
+    .login-card .form-group { margin-bottom: 16px; }
+    .login-error { color: #c92a2a; font-size: 13px; margin-bottom: 14px; min-height: 18px; }
+    .login-btn { width: 100%; padding: 11px; font-size: 15px; margin-top: 4px; }
+
+    /* Profile */
+    .profile-back { background: none; border: none; color: #6c63ff; font-size: 14px; font-weight: 500; cursor: pointer; padding: 0; display: flex; align-items: center; gap: 6px; }
+    .profile-back:hover { text-decoration: underline; }
+    .profile-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .profile-avatar { width: 56px; height: 56px; border-radius: 50%; background: #6c63ff; color: #fff; font-size: 22px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .profile-name { font-size: 22px; font-weight: 700; }
+    .profile-company { font-size: 14px; color: #888; margin-top: 2px; }
+    .profile-info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+    .profile-info-item { background: #fff; border-radius: 10px; padding: 14px 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .profile-info-item .label { font-size: 12px; color: #999; margin-bottom: 4px; }
+    .profile-info-item .value { font-size: 14px; font-weight: 500; color: #1a1a2e; }
+    .profile-section { background: #fff; border-radius: 12px; padding: 20px 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 16px; }
+    .profile-section h3 { font-size: 15px; font-weight: 600; margin-bottom: 14px; color: #1a1a2e; }
+    .profile-empty { color: #bbb; font-size: 13px; padding: 10px 0; }
+    .profile-chat { display: flex; flex-direction: column; }
+    .profile-chat-messages { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; padding: 4px 0; }
+    .note-item { display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid #f0f0f0; }
+    .note-item:first-child { border-top: none; }
+    .note-body { flex: 1; }
+    .note-content { font-size: 14px; color: #1a1a2e; line-height: 1.5; white-space: pre-wrap; }
+    .note-meta { font-size: 11px; color: #bbb; margin-top: 4px; }
+    .note-add { display: flex; gap: 10px; margin-top: 14px; }
+    .note-add textarea { flex: 1; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; resize: none; height: 72px; outline: none; transition: border-color 0.2s; }
+    .note-add textarea:focus { border-color: #6c63ff; }
+    .note-add-btn { align-self: flex-end; }
+
+    /* CSV Import */
+    .import-modal { width: 620px; }
+    .drop-zone { border: 2px dashed #d0d0e0; border-radius: 10px; padding: 32px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; color: #aaa; font-size: 14px; }
+    .drop-zone:hover, .drop-zone.drag-active { border-color: #6c63ff; background: #f5f3ff; color: #6c63ff; }
+    .drop-zone input[type=file] { display: none; }
+    .import-hint { font-size: 12px; color: #bbb; margin-top: 10px; }
+    .import-preview { margin-top: 16px; overflow-x: auto; max-height: 260px; overflow-y: auto; border: 1px solid #f0f0f0; border-radius: 8px; }
+    .import-preview table { font-size: 13px; min-width: 100%; }
+    .import-preview th { position: sticky; top: 0; background: #f7f7fb; z-index: 1; }
+    .import-summary { font-size: 13px; margin-top: 10px; color: #555; }
+    .import-summary .ok { color: #2f9e44; font-weight: 600; }
+    .import-summary .skip { color: #e67700; }
+    .row-skip td { color: #bbb; }
+
+    /* View toggle */
+    .view-toggle { display: flex; gap: 4px; }
+    .btn-view { background: #f0f0f0; color: #666; padding: 6px 14px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; transition: background 0.2s, color 0.2s; }
+    .btn-view.active { background: #6c63ff; color: #fff; }
+
+    /* Kanban */
+    .kanban-board { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 8px; }
+    .kanban-col { flex: 1; min-width: 210px; background: #f7f7fb; border-radius: 12px; padding: 12px; }
+    .kanban-col-header { font-size: 13px; font-weight: 600; color: #555; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .kanban-col-count { background: #e0e0e0; color: #555; border-radius: 20px; padding: 1px 8px; font-size: 12px; }
+    .kanban-cards { min-height: 180px; display: flex; flex-direction: column; gap: 10px; border-radius: 8px; padding: 2px; transition: background 0.2s; }
+    .kanban-cards.drag-over { background: #ede9ff; }
+    .kanban-card { background: #fff; border-radius: 10px; padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); cursor: grab; user-select: none; transition: box-shadow 0.2s; }
+    .kanban-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+    .kanban-card.dragging { opacity: 0.45; }
+    .kanban-card-title { font-size: 14px; font-weight: 500; color: #1a1a2e; margin-bottom: 5px; }
+    .kanban-card-contact { font-size: 12px; color: #999; margin-bottom: 5px; }
+    .kanban-card-amount { font-size: 13px; font-weight: 600; color: #6c63ff; }
+    .kanban-card-actions { display: flex; gap: 6px; margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -324,6 +399,7 @@
 <div class="main">
   <div class="topbar">
     <span id="topbar-title">Contacts</span>
+    <button class="btn-export" onclick="logout()" style="font-size:13px">Sign out</button>
   </div>
 
   <div class="content">
@@ -350,6 +426,7 @@
           <div class="export-btns">
             <button class="btn-export" onclick="exportCSV('contacts')">CSV</button>
             <button class="btn-export xlsx" onclick="exportXLSX('contacts')">Excel</button>
+            <button class="btn-export" onclick="openImportModal()">⬆ Import CSV</button>
             <button class="btn btn-primary" onclick="openModal('contact')">+ Add</button>
           </div>
         </div>
@@ -363,31 +440,112 @@
       </div>
     </div>
 
+    <!-- Contact Profile -->
+    <div id="tab-profile" style="display:none">
+      <button class="profile-back" onclick="backToContacts()">&#8592; Back to Contacts</button>
+
+      <div class="profile-header" style="margin-top:18px">
+        <div class="profile-avatar" id="profile-avatar">?</div>
+        <div>
+          <div class="profile-name" id="profile-name"></div>
+          <div class="profile-company" id="profile-company"></div>
+        </div>
+        <button class="btn btn-edit" style="margin-left:auto" id="profile-edit-btn">Edit</button>
+      </div>
+
+      <div class="profile-info-grid">
+        <div class="profile-info-item"><div class="label">Email</div><div class="value" id="profile-email">—</div></div>
+        <div class="profile-info-item"><div class="label">Phone</div><div class="value" id="profile-phone">—</div></div>
+        <div class="profile-info-item"><div class="label">Added</div><div class="value" id="profile-since">—</div></div>
+      </div>
+
+      <div class="profile-section">
+        <h3>Deals</h3>
+        <div id="profile-deals"></div>
+      </div>
+
+      <div class="profile-section">
+        <h3>Tasks</h3>
+        <div id="profile-tasks"></div>
+      </div>
+
+      <div class="profile-section">
+        <h3>Notes</h3>
+        <div id="profile-notes-list"></div>
+        <div class="note-add">
+          <textarea id="note-input" placeholder="Add a note..."></textarea>
+          <button class="btn btn-primary note-add-btn" onclick="addNote()">Add</button>
+        </div>
+      </div>
+
+      <div class="profile-section">
+        <h3>Chat history</h3>
+        <div class="profile-chat">
+          <div class="chat-messages profile-chat-messages" id="profile-chat-messages"></div>
+          <div class="chat-input-row">
+            <input type="text" id="profile-chat-input" placeholder="Message about this contact..." onkeydown="if(event.key==='Enter') sendProfileMessage()" />
+            <button class="btn btn-primary" onclick="sendProfileMessage()">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Deals -->
     <div id="tab-deals" style="display:none">
       <div class="card">
         <div class="card-header">
           <h2>All Deals</h2>
           <div class="export-btns">
+            <div class="view-toggle">
+              <button class="btn-view active" id="btn-view-table" onclick="setDealsView('table')">Table</button>
+              <button class="btn-view" id="btn-view-kanban" onclick="setDealsView('kanban')">Kanban</button>
+            </div>
             <button class="btn-export" onclick="exportCSV('deals')">CSV</button>
             <button class="btn-export xlsx" onclick="exportXLSX('deals')">Excel</button>
             <button class="btn btn-primary" onclick="openModal('deal')">+ Add</button>
           </div>
         </div>
-        <div class="search-bar">
-          <input type="text" id="search-deals" placeholder="Search by title or contact..." oninput="filterDeals()" />
-          <select id="filter-deals-status" onchange="filterDeals()">
-            <option value="">All statuses</option>
-            <option value="new">New</option>
-            <option value="negotiation">Negotiation</option>
-            <option value="won">Won</option>
-            <option value="lost">Lost</option>
-          </select>
+
+        <!-- Table view -->
+        <div id="deals-table-view">
+          <div class="search-bar">
+            <input type="text" id="search-deals" placeholder="Search by title or contact..." oninput="filterDeals()" />
+            <select id="filter-deals-status" onchange="filterDeals()">
+              <option value="">All statuses</option>
+              <option value="new">New</option>
+              <option value="negotiation">Negotiation</option>
+              <option value="won">Won</option>
+              <option value="lost">Lost</option>
+            </select>
+          </div>
+          <table>
+            <thead><tr><th>Title</th><th>Contact</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+            <tbody id="deals-body"></tbody>
+          </table>
         </div>
-        <table>
-          <thead><tr><th>Title</th><th>Contact</th><th>Amount</th><th>Status</th><th></th></tr></thead>
-          <tbody id="deals-body"></tbody>
-        </table>
+
+        <!-- Kanban view -->
+        <div id="deals-kanban-view" style="display:none">
+          <div class="kanban-board">
+            <div class="kanban-col" id="col-new">
+              <div class="kanban-col-header">New <span class="kanban-col-count" id="count-new">0</span></div>
+              <div class="kanban-cards" id="cards-new" ondragover="onDragOver(event)" ondrop="onDrop(event,'new')" ondragleave="onDragLeave(event)"></div>
+            </div>
+            <div class="kanban-col" id="col-negotiation">
+              <div class="kanban-col-header">Negotiation <span class="kanban-col-count" id="count-negotiation">0</span></div>
+              <div class="kanban-cards" id="cards-negotiation" ondragover="onDragOver(event)" ondrop="onDrop(event,'negotiation')" ondragleave="onDragLeave(event)"></div>
+            </div>
+            <div class="kanban-col" id="col-won">
+              <div class="kanban-col-header">Won <span class="kanban-col-count" id="count-won">0</span></div>
+              <div class="kanban-cards" id="cards-won" ondragover="onDragOver(event)" ondrop="onDrop(event,'won')" ondragleave="onDragLeave(event)"></div>
+            </div>
+            <div class="kanban-col" id="col-lost">
+              <div class="kanban-col-header">Lost <span class="kanban-col-count" id="count-lost">0</span></div>
+              <div class="kanban-cards" id="cards-lost" ondragover="onDragOver(event)" ondrop="onDrop(event,'lost')" ondragleave="onDragLeave(event)"></div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -502,13 +660,103 @@
   </div>
 </div>
 
+<!-- Login Screen -->
+<div class="login-screen" id="login-screen" style="display:none">
+  <div class="login-card">
+    <h1>CRM Assistant</h1>
+    <p>Sign in to continue</p>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="login-username" autocomplete="username" onkeydown="if(event.key==='Enter')login()" />
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="login-password" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()" />
+    </div>
+    <div class="login-error" id="login-error"></div>
+    <button class="btn btn-primary login-btn" onclick="login()">Sign in</button>
+  </div>
+</div>
+
+<!-- Modal: CSV Import -->
+<div class="modal-overlay" id="modal-import">
+  <div class="modal import-modal">
+    <h3>Import Contacts from CSV</h3>
+    <div class="drop-zone" id="drop-zone"
+         onclick="document.getElementById('csv-file-input').click()"
+         ondragover="onImportDragOver(event)" ondragleave="onImportDragLeave(event)" ondrop="onImportDrop(event)">
+      <input type="file" id="csv-file-input" accept=".csv,.txt" onchange="handleImportFile(this.files[0])" />
+      <div>Drop a CSV file here or <strong>click to browse</strong></div>
+      <div class="import-hint">Expected columns: Name, Email, Phone, Company (in any order)</div>
+    </div>
+    <div id="import-preview"></div>
+    <div id="import-summary" class="import-summary"></div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeImportModal()">Cancel</button>
+      <button class="btn btn-primary" id="import-confirm-btn" style="display:none" onclick="confirmImport()">Import</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const API = 'http://localhost:3000';
 let contacts = [], deals = [], tasks = [];
 
+// --- Auth ---
+
+function getToken() { return localStorage.getItem('crm_token'); }
+
+function showLogin() {
+  localStorage.removeItem('crm_token');
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-username').value = '';
+  document.getElementById('login-password').value = '';
+  document.getElementById('login-error').textContent = '';
+}
+
+function hideLogin() {
+  document.getElementById('login-screen').style.display = 'none';
+}
+
+async function login() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  document.getElementById('login-error').textContent = '';
+  try {
+    const res = await fetch(`${API}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    if (!res.ok) { document.getElementById('login-error').textContent = 'Invalid username or password.'; return; }
+    const { token } = await res.json();
+    localStorage.setItem('crm_token', token);
+    hideLogin();
+    showTab('dashboard');
+    requestNotifications().then(checkDeadlines);
+  } catch {
+    document.getElementById('login-error').textContent = 'Could not connect to server.';
+  }
+}
+
+function logout() {
+  showLogin();
+}
+
+async function apiFetch(url, opts = {}) {
+  const token = getToken();
+  const headers = { ...(opts.headers || {}) };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  if (opts.body) headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+  const res = await fetch(url, { ...opts, headers });
+  if (res.status === 401) { showLogin(); throw new Error('Unauthorized'); }
+  return res;
+}
+
 const tabs = { dashboard: 'Dashboard', contacts: 'Contacts', deals: 'Deals', tasks: 'Tasks', chat: 'AI Assistant' };
 
 function showTab(name) {
+  document.getElementById('tab-profile').style.display = 'none';
   Object.keys(tabs).forEach(t => {
     document.getElementById('tab-' + t).style.display = t === name ? 'block' : 'none';
     document.querySelectorAll('.nav-item')[Object.keys(tabs).indexOf(t)].classList.toggle('active', t === name);
@@ -524,9 +772,9 @@ let funnelChart = null, dealsChart = null;
 
 async function loadDashboard() {
   const [c, d, t] = await Promise.all([
-    fetch(`${API}/contacts`).then(r => r.json()),
-    fetch(`${API}/deals`).then(r => r.json()),
-    fetch(`${API}/tasks`).then(r => r.json()),
+    apiFetch(`${API}/contacts`).then(r => r.json()),
+    apiFetch(`${API}/deals`).then(r => r.json()),
+    apiFetch(`${API}/tasks`).then(r => r.json()),
   ]);
 
   document.getElementById('stat-contacts').textContent = c.length;
@@ -578,7 +826,7 @@ function badge(status) {
 
 // --- Contacts ---
 async function loadContacts() {
-  contacts = await fetch(`${API}/contacts`).then(r => r.json());
+  contacts = await apiFetch(`${API}/contacts`).then(r => r.json());
   renderContacts(contacts);
 }
 
@@ -617,8 +865,8 @@ async function saveContact() {
     phone: document.getElementById('contact-phone').value,
     company: document.getElementById('contact-company').value,
   };
-  if (id) await fetch(`${API}/contacts/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
-  else await fetch(`${API}/contacts`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  if (id) await apiFetch(`${API}/contacts/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  else await apiFetch(`${API}/contacts`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
   closeModal('contact');
   loadContacts();
 }
@@ -636,14 +884,155 @@ function editContact(id) {
 
 async function deleteContact(id) {
   if (!confirm('Delete contact?')) return;
-  await fetch(`${API}/contacts/${id}`, { method: 'DELETE' });
+  await apiFetch(`${API}/contacts/${id}`, { method: 'DELETE' });
   loadContacts();
+}
+
+// --- Contact Profile ---
+
+let profileContactId = null;
+
+async function openContact(id) {
+  profileContactId = id;
+  const contact = contacts.find(c => c.id === id);
+  if (!contact) return;
+
+  const initials = contact.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  document.getElementById('profile-avatar').textContent = initials;
+  document.getElementById('profile-name').textContent = contact.name;
+  document.getElementById('profile-company').textContent = contact.company || '';
+  document.getElementById('profile-email').textContent = contact.email || '—';
+  document.getElementById('profile-phone').textContent = contact.phone || '—';
+  document.getElementById('profile-since').textContent = contact.created_at
+    ? new Date(contact.created_at).toLocaleDateString('en') : '—';
+  document.getElementById('profile-edit-btn').onclick = () => editContact(id);
+
+  const [allDeals, allTasks, messages, notes] = await Promise.all([
+    apiFetch(`${API}/deals`).then(r => r.json()),
+    apiFetch(`${API}/tasks`).then(r => r.json()),
+    apiFetch(`${API}/messages?contact_id=${id}`).then(r => r.json()),
+    apiFetch(`${API}/notes?contact_id=${id}`).then(r => r.json()),
+  ]);
+
+  const cDeals = allDeals.filter(d => d.contact_id === id);
+  const cTasks = allTasks.filter(t => t.contact_id === id);
+
+  document.getElementById('profile-deals').innerHTML = cDeals.length
+    ? `<table style="width:100%;font-size:13px;border-collapse:collapse">
+        <thead><tr><th style="text-align:left;padding:6px 8px;color:#888;font-weight:500">Title</th><th style="text-align:left;padding:6px 8px;color:#888;font-weight:500">Amount</th><th style="text-align:left;padding:6px 8px;color:#888;font-weight:500">Status</th></tr></thead>
+        <tbody>${cDeals.map(d => `<tr>
+          <td style="padding:6px 8px;border-top:1px solid #f0f0f0">${d.title}</td>
+          <td style="padding:6px 8px;border-top:1px solid #f0f0f0">${d.amount ? d.amount.toLocaleString('en') + ' ₽' : '—'}</td>
+          <td style="padding:6px 8px;border-top:1px solid #f0f0f0">${badge(d.status)}</td>
+        </tr>`).join('')}</tbody>
+      </table>`
+    : '<div class="profile-empty">No deals linked to this contact</div>';
+
+  document.getElementById('profile-tasks').innerHTML = cTasks.length
+    ? `<table style="width:100%;font-size:13px;border-collapse:collapse">
+        <thead><tr><th style="text-align:left;padding:6px 8px;color:#888;font-weight:500">Description</th><th style="text-align:left;padding:6px 8px;color:#888;font-weight:500">Deadline</th><th style="text-align:left;padding:6px 8px;color:#888;font-weight:500">Status</th></tr></thead>
+        <tbody>${cTasks.map(t => `<tr>
+          <td style="padding:6px 8px;border-top:1px solid #f0f0f0">${t.description}</td>
+          <td style="padding:6px 8px;border-top:1px solid #f0f0f0">${t.deadline ? new Date(t.deadline).toLocaleDateString('en') : '—'}</td>
+          <td style="padding:6px 8px;border-top:1px solid #f0f0f0">${badge(t.status)}</td>
+        </tr>`).join('')}</tbody>
+      </table>`
+    : '<div class="profile-empty">No tasks linked to this contact</div>';
+
+  const chatEl = document.getElementById('profile-chat-messages');
+  chatEl.innerHTML = messages.length
+    ? messages.map(m => `<div class="msg msg-${m.role}">${m.content}</div>`).join('')
+    : '<div style="color:#bbb;font-size:13px;text-align:center;padding:20px 0">No chat history yet</div>';
+  chatEl.scrollTop = chatEl.scrollHeight;
+
+  document.getElementById('profile-chat-input').value = '';
+
+  Object.keys(tabs).forEach(t => {
+    document.getElementById('tab-' + t).style.display = 'none';
+    document.querySelectorAll('.nav-item')[Object.keys(tabs).indexOf(t)].classList.remove('active');
+  });
+  document.getElementById('tab-profile').style.display = 'block';
+  document.getElementById('topbar-title').textContent = contact.name;
+}
+
+function backToContacts() {
+  profileContactId = null;
+  document.getElementById('tab-profile').style.display = 'none';
+  showTab('contacts');
+}
+
+function renderNotes(notes) {
+  const el = document.getElementById('profile-notes-list');
+  el.innerHTML = notes.length ? notes.map(n => `
+    <div class="note-item">
+      <div class="note-body">
+        <div class="note-content">${n.content.replace(/</g,'&lt;')}</div>
+        <div class="note-meta">${new Date(n.created_at).toLocaleString('en')}</div>
+      </div>
+      <button class="btn btn-danger" style="align-self:flex-start;flex-shrink:0" onclick="deleteNote(${n.id})">✕</button>
+    </div>`).join('')
+    : '<div class="profile-empty">No notes yet</div>';
+}
+
+async function addNote() {
+  const input = document.getElementById('note-input');
+  const content = input.value.trim();
+  if (!content || !profileContactId) return;
+  await apiFetch(`${API}/notes`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content, contact_id: profileContactId }),
+  });
+  input.value = '';
+  const notes = await apiFetch(`${API}/notes?contact_id=${profileContactId}`).then(r => r.json());
+  renderNotes(notes);
+}
+
+async function deleteNote(id) {
+  await apiFetch(`${API}/notes/${id}`, { method: 'DELETE' });
+  const notes = await apiFetch(`${API}/notes?contact_id=${profileContactId}`).then(r => r.json());
+  renderNotes(notes);
+}
+
+async function sendProfileMessage() {
+  const input = document.getElementById('profile-chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  const chatEl = document.getElementById('profile-chat-messages');
+  const userMsg = document.createElement('div');
+  userMsg.className = 'msg msg-user';
+  userMsg.textContent = text;
+  chatEl.appendChild(userMsg);
+
+  const loadingMsg = document.createElement('div');
+  loadingMsg.className = 'msg msg-assistant msg-loading';
+  loadingMsg.textContent = 'Typing...';
+  chatEl.appendChild(loadingMsg);
+  chatEl.scrollTop = chatEl.scrollHeight;
+
+  const res = await apiFetch(`${API}/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: text, contact_id: profileContactId }),
+  });
+  const data = await res.json();
+  loadingMsg.remove();
+
+  const aiMsg = document.createElement('div');
+  aiMsg.className = 'msg msg-assistant';
+  aiMsg.textContent = data.reply;
+  chatEl.appendChild(aiMsg);
+  chatEl.scrollTop = chatEl.scrollHeight;
+  speak(data.reply);
 }
 
 // --- Deals ---
 async function loadDeals() {
-  deals = await fetch(`${API}/deals`).then(r => r.json());
+  deals = await apiFetch(`${API}/deals`).then(r => r.json());
   renderDeals(deals);
+  if (dealsView === 'kanban') renderKanban(deals);
 }
 
 function populateContactSelects() {
@@ -660,8 +1049,8 @@ async function saveDeal() {
     status: document.getElementById('deal-status').value,
     contact_id: document.getElementById('deal-contact').value || null,
   };
-  if (id) await fetch(`${API}/deals/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
-  else await fetch(`${API}/deals`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  if (id) await apiFetch(`${API}/deals/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  else await apiFetch(`${API}/deals`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
   closeModal('deal');
   loadDeals();
 }
@@ -680,13 +1069,13 @@ function editDeal(id) {
 
 async function deleteDeal(id) {
   if (!confirm('Delete deal?')) return;
-  await fetch(`${API}/deals/${id}`, { method: 'DELETE' });
+  await apiFetch(`${API}/deals/${id}`, { method: 'DELETE' });
   loadDeals();
 }
 
 // --- Tasks ---
 async function loadTasks() {
-  tasks = await fetch(`${API}/tasks`).then(r => r.json());
+  tasks = await apiFetch(`${API}/tasks`).then(r => r.json());
   renderTasks(tasks);
   updateOverdueBadge();
 }
@@ -710,8 +1099,8 @@ async function saveTask() {
     status: document.getElementById('task-status').value,
     contact_id: document.getElementById('task-contact').value || null,
   };
-  if (id) await fetch(`${API}/tasks/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
-  else await fetch(`${API}/tasks`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  if (id) await apiFetch(`${API}/tasks/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  else await apiFetch(`${API}/tasks`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
   closeModal('task');
   loadTasks();
 }
@@ -730,7 +1119,7 @@ function editTask(id) {
 
 async function deleteTask(id) {
   if (!confirm('Delete task?')) return;
-  await fetch(`${API}/tasks/${id}`, { method: 'DELETE' });
+  await apiFetch(`${API}/tasks/${id}`, { method: 'DELETE' });
   loadTasks();
 }
 
@@ -744,7 +1133,7 @@ async function sendMessage() {
   appendMsg('user', text);
   const loading = appendMsg('assistant', 'Typing...', true);
 
-  const res = await fetch(`${API}/chat`, {
+  const res = await apiFetch(`${API}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ message: text })
@@ -756,9 +1145,9 @@ async function sendMessage() {
 
   if (data.toolsUsed && data.toolsUsed.length > 0) {
     const affected = new Set(data.toolsUsed.map(t => t.replace(/_(contact|deal|task)$/, '').replace(/^(create|update|delete)_/, '')));
-    if (affected.has('contact')) { contacts = await fetch(`${API}/contacts`).then(r => r.json()); }
-    if (affected.has('deal'))    { deals    = await fetch(`${API}/deals`).then(r => r.json()); }
-    if (affected.has('task'))    { tasks    = await fetch(`${API}/tasks`).then(r => r.json()); }
+    if (affected.has('contact')) { contacts = await apiFetch(`${API}/contacts`).then(r => r.json()); }
+    if (affected.has('deal'))    { deals    = await apiFetch(`${API}/deals`).then(r => r.json()); }
+    if (affected.has('task'))    { tasks    = await apiFetch(`${API}/tasks`).then(r => r.json()); }
     const currentTab = document.querySelector('.nav-item.active')?.textContent;
     if (currentTab === 'Contacts') loadContacts();
     if (currentTab === 'Deals')   loadDeals();
@@ -782,7 +1171,7 @@ function renderContacts(list) {
   const tbody = document.getElementById('contacts-body');
   tbody.innerHTML = list.length ? list.map(c => `
     <tr>
-      <td>${c.name}</td>
+      <td><a href="#" style="color:#6c63ff;text-decoration:none;font-weight:500" onclick="openContact(${c.id});return false">${c.name}</a></td>
       <td>${c.email || '—'}</td>
       <td>${c.phone || '—'}</td>
       <td>${c.company || '—'}</td>
@@ -823,6 +1212,75 @@ function filterDeals() {
     const matchS = !status || d.status === status;
     return matchQ && matchS;
   }));
+}
+
+// --- Kanban ---
+
+let dealsView = 'table';
+let dragDealId = null;
+
+function setDealsView(view) {
+  dealsView = view;
+  document.getElementById('deals-table-view').style.display  = view === 'table'  ? '' : 'none';
+  document.getElementById('deals-kanban-view').style.display = view === 'kanban' ? '' : 'none';
+  document.getElementById('btn-view-table').classList.toggle('active', view === 'table');
+  document.getElementById('btn-view-kanban').classList.toggle('active', view === 'kanban');
+  if (view === 'kanban') renderKanban(deals);
+}
+
+function renderKanban(list) {
+  const statuses = ['new', 'negotiation', 'won', 'lost'];
+  statuses.forEach(s => {
+    const col = document.getElementById('cards-' + s);
+    const group = list.filter(d => d.status === s);
+    document.getElementById('count-' + s).textContent = group.length;
+    col.innerHTML = group.length ? group.map(d => `
+      <div class="kanban-card" draggable="true" data-id="${d.id}"
+           ondragstart="onDragStart(event,${d.id})" ondragend="onDragEnd(event)">
+        <div class="kanban-card-title">${d.title}</div>
+        ${d.contact_name ? `<div class="kanban-card-contact">👤 ${d.contact_name}</div>` : ''}
+        <div class="kanban-card-amount">${d.amount ? d.amount.toLocaleString('en') + ' ₽' : 'No amount'}</div>
+        <div class="kanban-card-actions">
+          <button class="btn btn-edit" onclick="editDeal(${d.id})">Edit</button>
+          <button class="btn btn-danger" onclick="deleteDeal(${d.id})">Delete</button>
+        </div>
+      </div>`).join('') : '<div style="color:#ccc;font-size:13px;text-align:center;padding:20px 0">Drop here</div>';
+  });
+}
+
+function onDragStart(e, id) {
+  dragDealId = id;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function onDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.currentTarget.classList.add('drag-over');
+}
+
+function onDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+async function onDrop(e, newStatus) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (!dragDealId) return;
+  const deal = deals.find(d => d.id === dragDealId);
+  if (!deal || deal.status === newStatus) return;
+  await apiFetch(`${API}/deals/${dragDealId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...deal, status: newStatus }),
+  });
+  deal.status = newStatus;
+  renderKanban(deals);
+  dragDealId = null;
 }
 
 function renderTasks(list) {
@@ -974,7 +1432,7 @@ async function requestNotifications() {
 
 async function checkDeadlines() {
   if (Notification.permission !== 'granted') return;
-  const data = await fetch(`${API}/tasks`).then(r => r.json());
+  const data = await apiFetch(`${API}/tasks`).then(r => r.json());
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
@@ -996,10 +1454,147 @@ async function checkDeadlines() {
   });
 }
 
+// --- CSV Import ---
+
+let importRows = [];
+
+function openImportModal() {
+  importRows = [];
+  document.getElementById('csv-file-input').value = '';
+  document.getElementById('import-preview').innerHTML = '';
+  document.getElementById('import-summary').innerHTML = '';
+  document.getElementById('import-confirm-btn').style.display = 'none';
+  document.getElementById('modal-import').classList.add('open');
+}
+
+function closeImportModal() {
+  document.getElementById('modal-import').classList.remove('open');
+}
+
+function onImportDragOver(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.add('drag-active');
+}
+
+function onImportDragLeave(e) {
+  document.getElementById('drop-zone').classList.remove('drag-active');
+}
+
+function onImportDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('drag-active');
+  const file = e.dataTransfer.files[0];
+  if (file) handleImportFile(file);
+}
+
+function handleImportFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => parseAndPreviewCSV(e.target.result);
+  reader.readAsText(file, 'UTF-8');
+}
+
+function parseAndPreviewCSV(text) {
+  text = text.replace(/^﻿/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const lines = text.split('\n').filter(l => l.trim());
+  if (!lines.length) return showImportError('File is empty.');
+
+  const sep = lines[0].includes(';') ? ';' : ',';
+
+  function splitLine(line) {
+    const result = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { inQ = !inQ; continue; }
+      if (ch === sep && !inQ) { result.push(cur.trim()); cur = ''; continue; }
+      cur += ch;
+    }
+    result.push(cur.trim());
+    return result;
+  }
+
+  const headers = splitLine(lines[0]).map(h => h.toLowerCase().replace(/\s+/g, ''));
+  const nameIdx    = headers.findIndex(h => h === 'name');
+  const emailIdx   = headers.findIndex(h => h === 'email');
+  const phoneIdx   = headers.findIndex(h => ['phone','tel','telephone'].includes(h));
+  const companyIdx = headers.findIndex(h => ['company','organization','firm'].includes(h));
+
+  if (nameIdx === -1) return showImportError('No "Name" column found in the CSV.');
+
+  importRows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cells = splitLine(lines[i]);
+    const name  = nameIdx    >= 0 ? cells[nameIdx]    || '' : '';
+    const email = emailIdx   >= 0 ? cells[emailIdx]   || '' : '';
+    const phone = phoneIdx   >= 0 ? cells[phoneIdx]   || '' : '';
+    const company = companyIdx >= 0 ? cells[companyIdx] || '' : '';
+    importRows.push({ name: name.trim(), email: email.trim(), phone: phone.trim(), company: company.trim(), valid: name.trim().length > 0 });
+  }
+
+  const valid = importRows.filter(r => r.valid);
+  const skipped = importRows.filter(r => !r.valid);
+
+  const previewHtml = `
+    <div class="import-preview">
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Company</th></tr></thead>
+        <tbody>${importRows.map(r => `
+          <tr class="${r.valid ? '' : 'row-skip'}">
+            <td>${r.name || '<em>missing</em>'}</td>
+            <td>${r.email || '—'}</td>
+            <td>${r.phone || '—'}</td>
+            <td>${r.company || '—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+
+  document.getElementById('import-preview').innerHTML = previewHtml;
+  document.getElementById('import-summary').innerHTML =
+    `<span class="ok">${valid.length} row${valid.length !== 1 ? 's' : ''} ready to import</span>` +
+    (skipped.length ? ` &nbsp;·&nbsp; <span class="skip">${skipped.length} skipped (no name)</span>` : '');
+
+  const btn = document.getElementById('import-confirm-btn');
+  btn.style.display = valid.length ? '' : 'none';
+  btn.textContent = `Import ${valid.length} contact${valid.length !== 1 ? 's' : ''}`;
+}
+
+function showImportError(msg) {
+  document.getElementById('import-preview').innerHTML = '';
+  document.getElementById('import-summary').innerHTML = `<span style="color:#c92a2a">${msg}</span>`;
+  document.getElementById('import-confirm-btn').style.display = 'none';
+}
+
+async function confirmImport() {
+  const valid = importRows.filter(r => r.valid);
+  if (!valid.length) return;
+
+  const btn = document.getElementById('import-confirm-btn');
+  btn.disabled = true;
+  btn.textContent = 'Importing...';
+
+  await Promise.all(valid.map(r =>
+    apiFetch(`${API}/contacts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: r.name, email: r.email || null, phone: r.phone || null, company: r.company || null }),
+    })
+  ));
+
+  btn.disabled = false;
+  closeImportModal();
+  await loadContacts();
+}
+
 // Init
-showTab('dashboard');
-requestNotifications().then(checkDeadlines);
 setInterval(checkDeadlines, 60 * 60 * 1000);
+if (getToken()) {
+  showTab('dashboard');
+  requestNotifications().then(checkDeadlines);
+} else {
+  showLogin();
+}
 </script>
 </body>
 </html>

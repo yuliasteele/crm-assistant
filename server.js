@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const Groq = require('groq-sdk');
 const db = require('./database');
 
@@ -9,6 +10,32 @@ app.use(cors());
 app.use(express.json());
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const JWT_SECRET = process.env.JWT_SECRET || 'crm-secret';
+
+// --- Auth ---
+
+app.post('/auth/login', (req, res) => {
+  const { username, password } = req.body;
+  if (username === process.env.CRM_USERNAME && password === process.env.CRM_PASSWORD) {
+    const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ token });
+  } else {
+    res.status(401).json({ error: 'Invalid credentials' });
+  }
+});
+
+function requireAuth(req, res, next) {
+  const auth = req.headers['authorization'];
+  if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    jwt.verify(auth.slice(7), JWT_SECRET);
+    next();
+  } catch {
+    res.status(401).json({ error: 'Invalid or expired token' });
+  }
+}
+
+app.use(requireAuth);
 
 // --- Contacts ---
 
@@ -99,6 +126,31 @@ app.put('/tasks/:id', (req, res) => {
 
 app.delete('/tasks/:id', (req, res) => {
   db.prepare('DELETE FROM tasks WHERE id=?').run(req.params.id);
+  res.json({ success: true });
+});
+
+// --- Notes ---
+
+app.get('/notes', (req, res) => {
+  const { contact_id, deal_id } = req.query;
+  let query = 'SELECT * FROM notes WHERE 1=1';
+  const params = [];
+  if (contact_id) { query += ' AND contact_id = ?'; params.push(Number(contact_id)); }
+  if (deal_id)    { query += ' AND deal_id = ?';    params.push(Number(deal_id)); }
+  query += ' ORDER BY created_at DESC';
+  res.json(db.prepare(query).all(...params));
+});
+
+app.post('/notes', (req, res) => {
+  const { content, contact_id, deal_id } = req.body;
+  const result = db.prepare(
+    'INSERT INTO notes (content, contact_id, deal_id) VALUES (?, ?, ?)'
+  ).run(content, contact_id ?? null, deal_id ?? null);
+  res.json({ id: result.lastInsertRowid });
+});
+
+app.delete('/notes/:id', (req, res) => {
+  db.prepare('DELETE FROM notes WHERE id=?').run(req.params.id);
   res.json({ success: true });
 });
 
