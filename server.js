@@ -594,6 +594,50 @@ app.delete('/deals/:id/tags/:tag_id', (req, res) => {
   res.json({ success: true });
 });
 
+// --- Pipeline Stages ---
+
+app.get('/pipeline-stages', (req, res) => {
+  res.json(db.prepare('SELECT * FROM pipeline_stages ORDER BY position').all());
+});
+
+app.post('/pipeline-stages', requireAdmin, (req, res) => {
+  const { label, color = 'blue', is_won = 0, is_lost = 0 } = req.body;
+  if (!label) return res.status(400).json({ error: 'label required' });
+  const name = label.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+  const maxPos = db.prepare('SELECT MAX(position) as m FROM pipeline_stages').get().m ?? -1;
+  try {
+    const result = db.prepare('INSERT INTO pipeline_stages (name, label, color, position, is_won, is_lost) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(name, label, color, maxPos + 1, is_won ? 1 : 0, is_lost ? 1 : 0);
+    logActivity('created', 'stage', result.lastInsertRowid, label);
+    res.json(db.prepare('SELECT * FROM pipeline_stages WHERE id = ?').get(result.lastInsertRowid));
+  } catch {
+    res.status(400).json({ error: 'Stage with this name already exists' });
+  }
+});
+
+app.put('/pipeline-stages/:id', requireAdmin, (req, res) => {
+  const stage = db.prepare('SELECT * FROM pipeline_stages WHERE id = ?').get(req.params.id);
+  if (!stage) return res.status(404).json({ error: 'Not found' });
+  const { label, color, position, is_won, is_lost } = req.body;
+  db.prepare('UPDATE pipeline_stages SET label=?, color=?, position=?, is_won=?, is_lost=? WHERE id=?')
+    .run(
+      label ?? stage.label, color ?? stage.color, position ?? stage.position,
+      is_won != null ? (is_won ? 1 : 0) : stage.is_won,
+      is_lost != null ? (is_lost ? 1 : 0) : stage.is_lost,
+      req.params.id
+    );
+  res.json(db.prepare('SELECT * FROM pipeline_stages WHERE id = ?').get(req.params.id));
+});
+
+app.delete('/pipeline-stages/:id', requireAdmin, (req, res) => {
+  const stage = db.prepare('SELECT * FROM pipeline_stages WHERE id = ?').get(req.params.id);
+  if (!stage) return res.status(404).json({ error: 'Not found' });
+  const inUse = db.prepare('SELECT COUNT(*) as c FROM deals WHERE status = ?').get(stage.name).c;
+  if (inUse > 0) return res.status(400).json({ error: `Cannot delete: ${inUse} deal(s) use this stage` });
+  db.prepare('DELETE FROM pipeline_stages WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
+
 // --- Activity Log ---
 
 app.get('/activity', (req, res) => {

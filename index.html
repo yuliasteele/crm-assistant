@@ -462,6 +462,11 @@
     .sidebar-overlay.show { display: block; }
 
     /* Bulk actions */
+    .stage-item { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #f0f0f0; }
+    .stage-color-dot { width:16px; height:16px; border-radius:50%; flex-shrink:0; }
+    .stage-label { font-size:14px; font-weight:500; }
+    body.dark .stage-item { border-bottom-color: #374151; }
+
     .bulk-toolbar { display:none; align-items:center; gap:10px; padding:10px 14px; background:#ede9ff; border-radius:8px; margin-bottom:12px; flex-wrap:wrap; }
     .bulk-toolbar.show { display:flex; }
     .bulk-count { font-size:13px; font-weight:600; color:#6c63ff; white-space:nowrap; }
@@ -900,6 +905,7 @@
               <button class="btn-view active" id="btn-view-table" onclick="setDealsView('table')">Table</button>
               <button class="btn-view" id="btn-view-kanban" onclick="setDealsView('kanban')">Kanban</button>
             </div>
+            <button class="btn-export" id="btn-manage-stages" style="display:none" onclick="openStagesModal()">⚙ Stages</button>
             <button class="btn-export" onclick="exportCSV('deals')">CSV</button>
             <button class="btn-export xlsx" onclick="exportXLSX('deals')">Excel</button>
             <button class="btn btn-primary" onclick="openModal('deal')">+ Add</button>
@@ -912,10 +918,6 @@
             <input type="text" id="search-deals" placeholder="Search by title or contact..." oninput="filterDeals()" />
             <select id="filter-deals-status" onchange="filterDeals()">
               <option value="">All statuses</option>
-              <option value="new">New</option>
-              <option value="negotiation">Negotiation</option>
-              <option value="won">Won</option>
-              <option value="lost">Lost</option>
             </select>
             <select id="filter-deals-tag" onchange="filterDeals()">
               <option value="">All tags</option>
@@ -936,24 +938,7 @@
 
         <!-- Kanban view -->
         <div id="deals-kanban-view" style="display:none">
-          <div class="kanban-board">
-            <div class="kanban-col" id="col-new">
-              <div class="kanban-col-header">New <span class="kanban-col-count" id="count-new">0</span></div>
-              <div class="kanban-cards" id="cards-new" ondragover="onDragOver(event)" ondrop="onDrop(event,'new')" ondragleave="onDragLeave(event)"></div>
-            </div>
-            <div class="kanban-col" id="col-negotiation">
-              <div class="kanban-col-header">Negotiation <span class="kanban-col-count" id="count-negotiation">0</span></div>
-              <div class="kanban-cards" id="cards-negotiation" ondragover="onDragOver(event)" ondrop="onDrop(event,'negotiation')" ondragleave="onDragLeave(event)"></div>
-            </div>
-            <div class="kanban-col" id="col-won">
-              <div class="kanban-col-header">Won <span class="kanban-col-count" id="count-won">0</span></div>
-              <div class="kanban-cards" id="cards-won" ondragover="onDragOver(event)" ondrop="onDrop(event,'won')" ondragleave="onDragLeave(event)"></div>
-            </div>
-            <div class="kanban-col" id="col-lost">
-              <div class="kanban-col-header">Lost <span class="kanban-col-count" id="count-lost">0</span></div>
-              <div class="kanban-cards" id="cards-lost" ondragover="onDragOver(event)" ondrop="onDrop(event,'lost')" ondragleave="onDragLeave(event)"></div>
-            </div>
-          </div>
+          <div class="kanban-board" id="kanban-board"></div>
         </div>
 
       </div>
@@ -1091,12 +1076,7 @@
     <div class="form-group"><label>Contact</label><select id="deal-contact"></select></div>
     <div class="form-group"><label>Amount (₽)</label><input type="number" id="deal-amount" /></div>
     <div class="form-group"><label>Status</label>
-      <select id="deal-status">
-        <option value="new">New</option>
-        <option value="negotiation">Negotiation</option>
-        <option value="won">Won</option>
-        <option value="lost">Lost</option>
-      </select>
+      <select id="deal-status"></select>
     </div>
     <div class="modal-actions">
       <button class="btn btn-cancel" onclick="closeModal('deal')">Cancel</button>
@@ -1199,10 +1179,35 @@
   </div>
 </div>
 
+<!-- Modal: Pipeline Stages -->
+<div class="modal-overlay" id="modal-stages">
+  <div class="modal" style="max-width:480px">
+    <h3>Pipeline Stages</h3>
+    <div id="stages-list" style="margin-bottom:4px"></div>
+    <div style="border-top:1px solid #eee;padding-top:14px;margin-top:10px">
+      <h4 style="font-size:13px;font-weight:600;margin-bottom:10px;color:#555">Add Stage</h4>
+      <div class="form-group"><label>Name</label><input type="text" id="new-stage-label" placeholder="e.g. Qualified" /></div>
+      <div class="form-group">
+        <label>Color</label>
+        <div class="color-swatches" id="stage-color-swatches"></div>
+      </div>
+      <div style="display:flex;gap:16px;margin-bottom:4px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="new-stage-is-won"> Count as Won</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="new-stage-is-lost"> Count as Lost</label>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('stages')">Close</button>
+      <button class="btn btn-primary" onclick="addPipelineStage()">Add Stage</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const API = 'http://localhost:3000';
 let contacts = [], deals = [], tasks = [];
 let selectedContacts = new Set(), selectedDeals = new Set(), selectedTasks = new Set();
+let pipelineStages = [];
 
 // --- Auth ---
 
@@ -1235,7 +1240,7 @@ async function login() {
     localStorage.setItem('crm_token', token);
     hideLogin();
     applyUserSession();
-    await loadAllTags();
+    await Promise.all([loadAllTags(), loadPipelineStages()]);
     populateTagFilters();
     showTab('dashboard');
     requestNotifications().then(checkDeadlines);
@@ -1301,18 +1306,18 @@ async function loadDashboard() {
   document.getElementById('stat-contacts').textContent = c.length;
   document.getElementById('stat-deals').textContent = d.length;
 
-  const revenue = d.filter(x => x.status === 'won').reduce((s, x) => s + (x.amount || 0), 0);
+  const revenue = d.filter(x => pipelineStages.find(s => s.name === x.status)?.is_won)
+    .reduce((s, x) => s + (x.amount || 0), 0);
   document.getElementById('stat-revenue').textContent = revenue.toLocaleString('en') + ' ₽';
 
   const done = t.filter(x => x.status === 'done').length;
   document.getElementById('stat-tasks-done').textContent = `${done} / ${t.length}`;
   document.getElementById('stat-tasks-sub').textContent = t.length ? `${Math.round(done/t.length*100)}% completed` : '';
 
-  // Funnel
-  const statuses = ['new', 'negotiation', 'won', 'lost'];
-  const labels   = ['New', 'Negotiation', 'Won', 'Lost'];
-  const counts   = statuses.map(s => d.filter(x => x.status === s).length);
-  const colors   = ['#a5b4fc', '#6c63ff', '#4ade80', '#f87171'];
+  // Funnel — dynamic stages
+  const labels = pipelineStages.map(s => s.label);
+  const counts = pipelineStages.map(s => d.filter(x => x.status === s.name).length);
+  const colors = pipelineStages.map(s => (TAG_COLORS[s.color] || TAG_COLORS.blue).text);
 
   if (funnelChart) funnelChart.destroy();
   funnelChart = new Chart(document.getElementById('chart-funnel'), {
@@ -1339,10 +1344,14 @@ async function loadDashboard() {
 }
 
 function badge(status) {
-  const map = { new: ['badge-new','New'], won: ['badge-won','Won'], lost: ['badge-lost','Lost'],
-    negotiation: ['badge-negotiation','Negotiation'], pending: ['badge-pending','Pending'], done: ['badge-done','Done'] };
-  const [cls, label] = map[status] || ['badge-new', status];
-  return `<span class="badge ${cls}">${label}</span>`;
+  if (status === 'pending') return `<span class="badge badge-pending">Pending</span>`;
+  if (status === 'done')    return `<span class="badge badge-done">Done</span>`;
+  const stage = pipelineStages.find(s => s.name === status);
+  if (stage) {
+    const c = TAG_COLORS[stage.color] || TAG_COLORS.blue;
+    return `<span class="badge" style="background:${c.bg};color:${c.text};border:none">${stage.label}</span>`;
+  }
+  return `<span class="badge badge-new">${status}</span>`;
 }
 
 // --- Contacts ---
@@ -1368,7 +1377,7 @@ function clearForm(type) {
   }
   if (type === 'deal') {
     ['deal-id','deal-title','deal-amount'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('deal-status').value = 'new';
+    document.getElementById('deal-status').value = pipelineStages[0]?.name || 'new';
     document.getElementById('modal-deal-title').textContent = 'New Deal';
   }
   if (type === 'task') {
@@ -1972,11 +1981,18 @@ function setDealsView(view) {
 }
 
 function renderKanban(list) {
-  const statuses = ['new', 'negotiation', 'won', 'lost'];
-  statuses.forEach(s => {
-    const col = document.getElementById('cards-' + s);
-    const group = list.filter(d => d.status === s);
-    document.getElementById('count-' + s).textContent = group.length;
+  const board = document.getElementById('kanban-board');
+  board.innerHTML = pipelineStages.map(s => `
+    <div class="kanban-col">
+      <div class="kanban-col-header">${s.label} <span class="kanban-col-count" id="count-${s.name}">0</span></div>
+      <div class="kanban-cards" id="cards-${s.name}"
+           ondragover="onDragOver(event)" ondrop="onDrop(event,'${s.name}')" ondragleave="onDragLeave(event)"></div>
+    </div>`).join('');
+
+  pipelineStages.forEach(s => {
+    const col = document.getElementById('cards-' + s.name);
+    const group = list.filter(d => d.status === s.name);
+    document.getElementById('count-' + s.name).textContent = group.length;
     col.innerHTML = group.length ? group.map(d => `
       <div class="kanban-card" draggable="true" data-id="${d.id}"
            ondragstart="onDragStart(event,${d.id})" ondragend="onDragEnd(event)">
@@ -2232,6 +2248,8 @@ function applyUserSession() {
   roleEl.textContent = u.role;
   roleEl.className = `role-badge role-${u.role}`;
   document.getElementById('nav-users').style.display = u.role === 'admin' ? '' : 'none';
+  const btnStages = document.getElementById('btn-manage-stages');
+  if (btnStages) btnStages.style.display = u.role === 'admin' ? '' : 'none';
 }
 
 function toggleUserMenu() {
@@ -2392,6 +2410,86 @@ async function bulkSetStatus(type, status) {
   }));
   sel.clear();
   if (type === 'tasks') loadTasks(); else loadDeals();
+}
+
+// --- Pipeline Stages ---
+
+async function loadPipelineStages() {
+  pipelineStages = await apiFetch(`${API}/pipeline-stages`).then(r => r.json());
+  populatePipelineUI();
+}
+
+function populatePipelineUI() {
+  const dealStatus = document.getElementById('deal-status');
+  if (dealStatus) dealStatus.innerHTML = pipelineStages.map(s => `<option value="${s.name}">${s.label}</option>`).join('');
+  const filterStatus = document.getElementById('filter-deals-status');
+  if (filterStatus) filterStatus.innerHTML = '<option value="">All statuses</option>' +
+    pipelineStages.map(s => `<option value="${s.name}">${s.label}</option>`).join('');
+}
+
+function openStagesModal() {
+  renderStagesList();
+  renderColorSwatches('stage-color-swatches', 'new-stage-label');
+  document.getElementById('new-stage-label').value = '';
+  document.getElementById('new-stage-is-won').checked = false;
+  document.getElementById('new-stage-is-lost').checked = false;
+  document.getElementById('modal-stages').classList.add('open');
+}
+
+function renderStagesList() {
+  const el = document.getElementById('stages-list');
+  if (!el) return;
+  el.innerHTML = pipelineStages.length ? pipelineStages.map((s, i) => {
+    const c = TAG_COLORS[s.color] || TAG_COLORS.blue;
+    return `<div class="stage-item">
+      <span class="stage-color-dot" style="background:${c.bg};border:2px solid ${c.text}"></span>
+      <span class="stage-label">${s.label}</span>
+      ${s.is_won ? `<span class="badge" style="background:${TAG_COLORS.green.bg};color:${TAG_COLORS.green.text};font-size:11px;padding:1px 6px">Won</span>` : ''}
+      ${s.is_lost ? `<span class="badge" style="background:${TAG_COLORS.red.bg};color:${TAG_COLORS.red.text};font-size:11px;padding:1px 6px">Lost</span>` : ''}
+      <div style="margin-left:auto;display:flex;gap:4px">
+        ${i > 0 ? `<button class="btn btn-edit" style="padding:3px 8px;font-size:12px" onclick="moveStage(${s.id},-1)">↑</button>` : '<span style="width:32px"></span>'}
+        ${i < pipelineStages.length - 1 ? `<button class="btn btn-edit" style="padding:3px 8px;font-size:12px" onclick="moveStage(${s.id},1)">↓</button>` : '<span style="width:32px"></span>'}
+        <button class="btn btn-danger" style="padding:3px 8px;font-size:12px" onclick="deleteStage(${s.id})">×</button>
+      </div>
+    </div>`;
+  }).join('') : '<p style="color:#aaa;font-size:13px;padding:8px 0">No stages yet</p>';
+}
+
+async function addPipelineStage() {
+  const label = document.getElementById('new-stage-label').value.trim();
+  if (!label) return;
+  const is_won  = document.getElementById('new-stage-is-won').checked;
+  const is_lost = document.getElementById('new-stage-is-lost').checked;
+  const res = await apiFetch(`${API}/pipeline-stages`, {
+    method: 'POST',
+    body: JSON.stringify({ label, color: selectedTagColor, is_won, is_lost }),
+  });
+  if (!res.ok) { const e = await res.json(); alert(e.error); return; }
+  document.getElementById('new-stage-label').value = '';
+  await loadPipelineStages();
+  renderStagesList();
+}
+
+async function deleteStage(id) {
+  if (!confirm('Delete this stage?')) return;
+  const res = await apiFetch(`${API}/pipeline-stages/${id}`, { method: 'DELETE' });
+  if (!res.ok) { const e = await res.json(); alert(e.error); return; }
+  await loadPipelineStages();
+  renderStagesList();
+  if (dealsView === 'kanban') renderKanban(deals);
+}
+
+async function moveStage(id, dir) {
+  const idx = pipelineStages.findIndex(s => s.id === id);
+  const other = pipelineStages[idx + dir];
+  if (!other) return;
+  await Promise.all([
+    apiFetch(`${API}/pipeline-stages/${id}`, { method: 'PUT', body: JSON.stringify({ position: other.position }) }),
+    apiFetch(`${API}/pipeline-stages/${other.id}`, { method: 'PUT', body: JSON.stringify({ position: pipelineStages[idx].position }) }),
+  ]);
+  await loadPipelineStages();
+  renderStagesList();
+  if (dealsView === 'kanban') renderKanban(deals);
 }
 
 // --- Tags ---
@@ -2761,7 +2859,7 @@ if (localStorage.getItem('crm_dark') === '1') applyDarkMode(true);
 
 if (getToken()) {
   applyUserSession();
-  loadAllTags().then(populateTagFilters);
+  Promise.all([loadAllTags(), loadPipelineStages()]).then(populateTagFilters);
   showTab('dashboard');
   requestNotifications().then(checkDeadlines);
 } else {

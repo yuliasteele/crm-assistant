@@ -89,4 +89,23 @@ db.exec(`
   );
 `);
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS pipeline_stages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    label TEXT NOT NULL,
+    color TEXT NOT NULL DEFAULT 'blue',
+    position INTEGER NOT NULL DEFAULT 0,
+    is_won INTEGER NOT NULL DEFAULT 0,
+    is_lost INTEGER NOT NULL DEFAULT 0
+  );
+`);
+if (db.prepare('SELECT COUNT(*) as c FROM pipeline_stages').get().c === 0) {
+  const ins = db.prepare('INSERT INTO pipeline_stages (name, label, color, position, is_won, is_lost) VALUES (?, ?, ?, ?, ?, ?)');
+  ins.run('new', 'New', 'blue', 0, 0, 0);
+  ins.run('negotiation', 'Negotiation', 'purple', 1, 0, 0);
+  ins.run('won', 'Won', 'green', 2, 1, 0);
+  ins.run('lost', 'Lost', 'red', 3, 0, 1);
+}
+
 module.exports = db;
