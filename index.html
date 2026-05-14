@@ -462,6 +462,13 @@
     .sidebar-overlay.show { display: block; }
 
     /* Bulk actions */
+    .email-status-row { display:flex; align-items:center; gap:12px; padding:8px 0; }
+    .email-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+    .email-dot-ok { background:#4ade80; }
+    .email-dot-error { background:#f87171; }
+    .email-dot-unknown { background:#d1d5db; }
+    body.dark .email-dot-unknown { background:#4b5563; }
+
     .backup-section { display:flex; gap:20px; flex-wrap:wrap; padding:4px 0; }
     .backup-block { flex:1; min-width:220px; padding:18px; border:1px solid #e5e7eb; border-radius:10px; display:flex; flex-direction:column; gap:10px; }
     .backup-block-title { font-size:14px; font-weight:600; }
@@ -1025,6 +1032,29 @@
       </div>
 
       <div class="card" style="margin-top:20px">
+        <div class="card-header"><h2>Email Notifications</h2></div>
+        <div class="email-status-row" id="email-status-row">
+          <div id="email-status-indicator" class="email-dot email-dot-unknown"></div>
+          <div>
+            <div id="email-status-text" style="font-size:14px;font-weight:500">Checking…</div>
+            <div id="email-status-sub" style="font-size:12px;color:#888;margin-top:2px"></div>
+          </div>
+          <button class="btn btn-edit" style="margin-left:auto" onclick="testEmail()">Send test email</button>
+        </div>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid #f0f0f0">
+          <p style="font-size:13px;color:#666;line-height:1.6;margin-bottom:8px">
+            Email notifications are sent to <strong id="email-notify-addr">—</strong> when:
+          </p>
+          <ul style="font-size:13px;color:#555;line-height:2;padding-left:18px">
+            <li>A task is created with a deadline</li>
+            <li>A deal changes its pipeline stage</li>
+            <li>Overdue tasks exist (once per day)</li>
+          </ul>
+          <p style="font-size:12px;color:#aaa;margin-top:10px">Configure via <code style="background:#f3f4f6;padding:1px 5px;border-radius:4px">SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, NOTIFY_EMAIL</code> in <code style="background:#f3f4f6;padding:1px 5px;border-radius:4px">.env</code></p>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px">
         <div class="card-header"><h2>Backup &amp; Restore</h2></div>
         <div class="backup-section">
           <div class="backup-block">
@@ -1319,7 +1349,7 @@ function showTab(name) {
   if (name === 'deals')     loadDeals();
   if (name === 'tasks')     loadTasks();
   if (name === 'activity')  loadActivity();
-  if (name === 'users')     loadUsers();
+  if (name === 'users')     { loadUsers(); loadEmailStatus(); }
 }
 
 let funnelChart = null, dealsChart = null;
@@ -2356,6 +2386,40 @@ async function savePassword() {
   });
   if (!res.ok) { const d = await res.json(); errEl.textContent = d.error; return; }
   closeModal('change-password');
+}
+
+// --- Email Notifications ---
+
+async function loadEmailStatus() {
+  const el = document.getElementById('email-status-indicator');
+  const txt = document.getElementById('email-status-text');
+  const sub = document.getElementById('email-status-sub');
+  const addr = document.getElementById('email-notify-addr');
+  if (!el) return;
+  try {
+    const data = await apiFetch(`${API}/email/status`).then(r => r.json());
+    if (data.configured) {
+      el.className = 'email-dot email-dot-ok';
+      txt.textContent = 'Configured';
+      sub.textContent = `SMTP: ${data.smtp_host}`;
+      if (addr) addr.textContent = data.notify_email;
+    } else {
+      el.className = 'email-dot email-dot-error';
+      txt.textContent = 'Not configured';
+      sub.textContent = 'Add SMTP settings to .env to enable';
+      if (addr) addr.textContent = '—';
+    }
+  } catch {
+    el.className = 'email-dot email-dot-unknown';
+    txt.textContent = 'Unknown';
+  }
+}
+
+async function testEmail() {
+  const res = await apiFetch(`${API}/email/test`, { method: 'POST' });
+  const data = await res.json();
+  if (res.ok) alert('Test email sent! Check your inbox.');
+  else alert('Failed: ' + data.error);
 }
 
 // --- Backup / Restore ---

@@ -4,6 +4,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const Groq = require('groq-sdk');
+const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
 const db = require('./database');
@@ -14,6 +15,63 @@ app.use(express.json());
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const JWT_SECRET = process.env.JWT_SECRET || 'crm-secret';
+
+// --- Email ---
+
+const mailerReady = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS && process.env.NOTIFY_EMAIL);
+const mailer = mailerReady ? nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT) || 587,
+  secure: Number(process.env.SMTP_PORT) === 465,
+  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+}) : null;
+
+async function sendEmail(subject, html) {
+  if (!mailer) return;
+  try {
+    await mailer.sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to: process.env.NOTIFY_EMAIL,
+      subject,
+      html,
+    });
+  } catch (e) {
+    console.error('Email error:', e.message);
+  }
+}
+
+function emailHtml(title, body) {
+  return `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
+    <h2 style="color:#6c63ff;margin:0 0 16px">${title}</h2>
+    ${body}
+    <p style="margin-top:24px;font-size:12px;color:#aaa">CRM Assistant</p>
+  </div>`;
+}
+
+// Overdue tasks reminder — runs every hour, sends at most once per day
+let lastOverdueEmail = 0;
+function checkAndEmailOverdue() {
+  if (!mailer) return;
+  if (Date.now() - lastOverdueEmail < 23 * 60 * 60 * 1000) return;
+  const rows = db.prepare(`
+    SELECT t.*, c.name AS contact_name FROM tasks t
+    LEFT JOIN contacts c ON t.contact_id = c.id
+    WHERE t.status='pending' AND t.deadline < datetime('now')
+    ORDER BY t.deadline ASC
+  `).all();
+  if (!rows.length) return;
+  lastOverdueEmail = Date.now();
+  const items = rows.map(t =>
+    `<li style="margin-bottom:6px"><strong>${t.description}</strong>` +
+    (t.contact_name ? ` &mdash; ${t.contact_name}` : '') +
+    ` <span style="color:#ef4444">(due ${new Date(t.deadline).toLocaleDateString('en')})</span></li>`
+  ).join('');
+  sendEmail(
+    `[CRM] ${rows.length} overdue task${rows.length > 1 ? 's' : ''}`,
+    emailHtml('Overdue Tasks', `<p>You have <strong>${rows.length}</strong> overdue task(s):</p><ul>${items}</ul>`)
+  );
+}
+setInterval(checkAndEmailOverdue, 60 * 60 * 1000);
 
 // --- Auth ---
 
@@ -131,10 +189,23 @@ app.post('/deals', (req, res) => {
 
 app.put('/deals/:id', (req, res) => {
   const { title, amount, status, contact_id } = req.body;
+  const old = db.prepare('SELECT status FROM deals WHERE id=?').get(req.params.id);
   db.prepare(
     'UPDATE deals SET title=?, amount=?, status=?, contact_id=? WHERE id=?'
   ).run(title, amount, status, contact_id, req.params.id);
   logActivity('updated', 'deal', req.params.id, title);
+  if (old && status && old.status !== status) {
+    const stage = db.prepare('SELECT label FROM pipeline_stages WHERE name=?').get(status);
+    const oldStage = db.prepare('SELECT label FROM pipeline_stages WHERE name=?').get(old.status);
+    sendEmail(
+      `[CRM] Deal updated: ${title}`,
+      emailHtml('Deal Status Changed', `
+        <p><strong>${title}</strong></p>
+        <p>${oldStage?.label || old.status} &rarr; <strong>${stage?.label || status}</strong></p>
+        ${amount ? `<p>Amount: ${Number(amount).toLocaleString('en')} ₽</p>` : ''}
+      `)
+    );
+  }
   res.json({ success: true });
 });
 
@@ -162,6 +233,17 @@ app.post('/tasks', (req, res) => {
     'INSERT INTO tasks (description, deadline, status, contact_id) VALUES (?, ?, ?, ?)'
   ).run(description, deadline, status || 'pending', contact_id);
   logActivity('created', 'task', result.lastInsertRowid, description);
+  if (deadline) {
+    const contact = contact_id ? db.prepare('SELECT name FROM contacts WHERE id=?').get(contact_id) : null;
+    sendEmail(
+      `[CRM] New task: ${description}`,
+      emailHtml('New Task Created', `
+        <p><strong>${description}</strong></p>
+        ${contact ? `<p>Contact: ${contact.name}</p>` : ''}
+        <p>Due: <strong>${new Date(deadline).toLocaleString('en')}</strong></p>
+      `)
+    );
+  }
   res.json({ id: result.lastInsertRowid });
 });
 
@@ -594,6 +676,27 @@ app.post('/deals/:id/tags', (req, res) => {
 app.delete('/deals/:id/tags/:tag_id', (req, res) => {
   db.prepare('DELETE FROM deal_tags WHERE deal_id=? AND tag_id=?').run(req.params.id, req.params.tag_id);
   res.json({ success: true });
+});
+
+// --- Email status / test ---
+
+app.get('/email/status', requireAdmin, (req, res) => {
+  res.json({
+    configured: mailerReady,
+    smtp_host: process.env.SMTP_HOST || null,
+    notify_email: process.env.NOTIFY_EMAIL || null,
+  });
+});
+
+app.post('/email/test', requireAdmin, async (req, res) => {
+  if (!mailer) return res.status(400).json({ error: 'Email not configured. Set SMTP_HOST, SMTP_USER, SMTP_PASS, NOTIFY_EMAIL in .env' });
+  try {
+    await mailer.verify();
+    await sendEmail('[CRM] Test email', emailHtml('Test Email', '<p>Email notifications are working correctly!</p>'));
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // --- Backup / Restore ---
