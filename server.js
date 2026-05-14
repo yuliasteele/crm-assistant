@@ -109,14 +109,14 @@ const tools = [
     type: 'function',
     function: {
       name: 'create_contact',
-      description: 'Создать новый контакт в CRM',
+      description: 'Create a new contact in CRM',
       parameters: {
         type: 'object',
         properties: {
-          name:    { type: 'string', description: 'Имя контакта' },
+          name:    { type: 'string', description: 'Contact name' },
           email:   { type: 'string', description: 'Email' },
-          phone:   { type: 'string', description: 'Телефон' },
-          company: { type: 'string', description: 'Компания' },
+          phone:   { type: 'string', description: 'Phone number' },
+          company: { type: 'string', description: 'Company' },
         },
         required: ['name'],
       },
@@ -126,11 +126,11 @@ const tools = [
     type: 'function',
     function: {
       name: 'update_contact',
-      description: 'Обновить существующий контакт',
+      description: 'Update an existing contact',
       parameters: {
         type: 'object',
         properties: {
-          id:      { type: ['integer', 'string'], description: 'ID контакта' },
+          id:      { type: ['integer', 'string'], description: 'Contact ID' },
           name:    { type: 'string' },
           email:   { type: 'string' },
           phone:   { type: 'string' },
@@ -144,10 +144,10 @@ const tools = [
     type: 'function',
     function: {
       name: 'delete_contact',
-      description: 'Удалить контакт',
+      description: 'Delete a contact',
       parameters: {
         type: 'object',
-        properties: { id: { type: ['integer', 'string'], description: 'ID контакта' } },
+        properties: { id: { type: ['integer', 'string'], description: 'Contact ID' } },
         required: ['id'],
       },
     },
@@ -156,14 +156,14 @@ const tools = [
     type: 'function',
     function: {
       name: 'create_deal',
-      description: 'Создать новую сделку',
+      description: 'Create a new deal',
       parameters: {
         type: 'object',
         properties: {
-          title:      { type: 'string', description: 'Название сделки' },
-          amount:     { type: ['number', 'string'], description: 'Сумма сделки' },
+          title:      { type: 'string', description: 'Deal title' },
+          amount:     { type: ['number', 'string'], description: 'Deal amount' },
           status:     { type: 'string', enum: ['new', 'negotiation', 'won', 'lost'] },
-          contact_id: { type: ['integer', 'string'], description: 'ID связанного контакта' },
+          contact_id: { type: ['integer', 'string'], description: 'ID of the linked contact' },
         },
         required: ['title'],
       },
@@ -173,7 +173,7 @@ const tools = [
     type: 'function',
     function: {
       name: 'update_deal',
-      description: 'Обновить существующую сделку',
+      description: 'Update an existing deal',
       parameters: {
         type: 'object',
         properties: {
@@ -191,7 +191,7 @@ const tools = [
     type: 'function',
     function: {
       name: 'delete_deal',
-      description: 'Удалить сделку',
+      description: 'Delete a deal',
       parameters: {
         type: 'object',
         properties: { id: { type: ['integer', 'string'] } },
@@ -203,14 +203,14 @@ const tools = [
     type: 'function',
     function: {
       name: 'create_task',
-      description: 'Создать новую задачу',
+      description: 'Create a new task',
       parameters: {
         type: 'object',
         properties: {
-          description: { type: 'string', description: 'Описание задачи' },
-          deadline:    { type: 'string', description: 'Дедлайн в формате ISO 8601' },
+          description: { type: 'string', description: 'Task description' },
+          deadline:    { type: 'string', description: 'Deadline in ISO 8601 format' },
           status:      { type: 'string', enum: ['pending', 'done'] },
-          contact_id:  { type: ['integer', 'string'], description: 'ID связанного контакта' },
+          contact_id:  { type: ['integer', 'string'], description: 'ID of the linked contact' },
         },
         required: ['description'],
       },
@@ -220,7 +220,7 @@ const tools = [
     type: 'function',
     function: {
       name: 'update_task',
-      description: 'Обновить существующую задачу',
+      description: 'Update an existing task',
       parameters: {
         type: 'object',
         properties: {
@@ -238,7 +238,7 @@ const tools = [
     type: 'function',
     function: {
       name: 'delete_task',
-      description: 'Удалить задачу',
+      description: 'Delete a task',
       parameters: {
         type: 'object',
         properties: { id: { type: ['integer', 'string'] } },
@@ -328,14 +328,14 @@ app.post('/chat', async (req, res) => {
     ORDER BY created_at ASC LIMIT 50
   `).all(contact_id ?? null);
 
-  const systemPrompt = `Ты внутренний CRM-ассистент. У тебя есть полный доступ к базе данных клиентов, сделок и задач. Ты можешь добавлять, изменять и удалять любые записи по команде пользователя. Всегда подтверждай что именно ты сделал с базой данных. Отвечай на русском языке.
-Используй инструменты для любых изменений в БД — не описывай действия словами, а выполняй их.
-ВАЖНО: имена, фамилии, названия компаний и любые другие данные передавай в инструменты ТОЧНО так, как их написал пользователь — не изменяй, не исправляй и не заменяй ни одного слова.
-Текущие данные CRM:
+  const systemPrompt = `You are an internal CRM assistant. You have full access to the database of contacts, deals, and tasks. You can add, update, and delete any records upon user request. Always confirm exactly what you did in the database. Reply in English.
+Use tools for any database changes — do not describe actions in words, execute them.
+IMPORTANT: pass names, surnames, company names, and any other data to the tools EXACTLY as the user wrote them — do not modify, correct, or substitute any word.
+Current CRM data:
 
-Контакты: ${JSON.stringify(db.prepare('SELECT * FROM contacts').all())}
-Сделки: ${JSON.stringify(db.prepare('SELECT * FROM deals').all())}
-Задачи: ${JSON.stringify(db.prepare('SELECT * FROM tasks').all())}`;
+Contacts: ${JSON.stringify(db.prepare('SELECT * FROM contacts').all())}
+Deals: ${JSON.stringify(db.prepare('SELECT * FROM deals').all())}
+Tasks: ${JSON.stringify(db.prepare('SELECT * FROM tasks').all())}`;
 
   db.prepare('INSERT INTO messages (role, content, contact_id) VALUES (?, ?, ?)').run('user', message, contact_id ?? null);
 

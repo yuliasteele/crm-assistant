@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ru" translate="no">
+<html lang="en" translate="no">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="google" content="notranslate" />
-  <title>CRM Ассистент</title>
+  <title>CRM Assistant</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
   <style>
@@ -313,17 +313,17 @@
 <body>
 
 <div class="sidebar">
-  <h1>CRM Ассистент</h1>
-  <div class="nav-item active" onclick="showTab('dashboard')">Дашборд</div>
-  <div class="nav-item" onclick="showTab('contacts')">Контакты</div>
-  <div class="nav-item" onclick="showTab('deals')">Сделки</div>
-  <div class="nav-item" onclick="showTab('tasks')" id="nav-tasks">Задачи</div>
-  <div class="nav-item" onclick="showTab('chat')">AI Ассистент</div>
+  <h1>CRM Assistant</h1>
+  <div class="nav-item active" onclick="showTab('dashboard')">Dashboard</div>
+  <div class="nav-item" onclick="showTab('contacts')">Contacts</div>
+  <div class="nav-item" onclick="showTab('deals')">Deals</div>
+  <div class="nav-item" onclick="showTab('tasks')" id="nav-tasks">Tasks</div>
+  <div class="nav-item" onclick="showTab('chat')">AI Assistant</div>
 </div>
 
 <div class="main">
   <div class="topbar">
-    <span id="topbar-title">Контакты</span>
+    <span id="topbar-title">Contacts</span>
   </div>
 
   <div class="content">
@@ -331,14 +331,14 @@
     <!-- Dashboard -->
     <div id="tab-dashboard">
       <div class="stats-grid">
-        <div class="stat-card"><div class="label">Контакты</div><div class="value" id="stat-contacts">—</div></div>
-        <div class="stat-card"><div class="label">Сделки</div><div class="value" id="stat-deals">—</div></div>
-        <div class="stat-card"><div class="label">Выручка (выигранные)</div><div class="value" id="stat-revenue">—</div></div>
-        <div class="stat-card"><div class="label">Задач выполнено</div><div class="value" id="stat-tasks-done">—</div><div class="sub" id="stat-tasks-sub"></div></div>
+        <div class="stat-card"><div class="label">Contacts</div><div class="value" id="stat-contacts">—</div></div>
+        <div class="stat-card"><div class="label">Deals</div><div class="value" id="stat-deals">—</div></div>
+        <div class="stat-card"><div class="label">Revenue (won)</div><div class="value" id="stat-revenue">—</div></div>
+        <div class="stat-card"><div class="label">Tasks completed</div><div class="value" id="stat-tasks-done">—</div><div class="sub" id="stat-tasks-sub"></div></div>
       </div>
       <div class="charts-grid">
-        <div class="chart-card"><h3>Воронка продаж</h3><canvas id="chart-funnel"></canvas></div>
-        <div class="chart-card"><h3>Сделки по сумме</h3><canvas id="chart-deals"></canvas></div>
+        <div class="chart-card"><h3>Sales Funnel</h3><canvas id="chart-funnel"></canvas></div>
+        <div class="chart-card"><h3>Deals by Amount</h3><canvas id="chart-deals"></canvas></div>
       </div>
     </div>
 
@@ -346,18 +346,18 @@
     <div id="tab-contacts" style="display:none">
       <div class="card">
         <div class="card-header">
-          <h2>Все контакты</h2>
+          <h2>All Contacts</h2>
           <div class="export-btns">
             <button class="btn-export" onclick="exportCSV('contacts')">CSV</button>
             <button class="btn-export xlsx" onclick="exportXLSX('contacts')">Excel</button>
-            <button class="btn btn-primary" onclick="openModal('contact')">+ Добавить</button>
+            <button class="btn btn-primary" onclick="openModal('contact')">+ Add</button>
           </div>
         </div>
         <div class="search-bar">
-          <input type="text" id="search-contacts" placeholder="Поиск по имени, email, компании..." oninput="filterContacts()" />
+          <input type="text" id="search-contacts" placeholder="Search by name, email, company..." oninput="filterContacts()" />
         </div>
         <table>
-          <thead><tr><th>Имя</th><th>Email</th><th>Телефон</th><th>Компания</th><th></th></tr></thead>
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Company</th><th></th></tr></thead>
           <tbody id="contacts-body"></tbody>
         </table>
       </div>
@@ -367,25 +367,25 @@
     <div id="tab-deals" style="display:none">
       <div class="card">
         <div class="card-header">
-          <h2>Все сделки</h2>
+          <h2>All Deals</h2>
           <div class="export-btns">
             <button class="btn-export" onclick="exportCSV('deals')">CSV</button>
             <button class="btn-export xlsx" onclick="exportXLSX('deals')">Excel</button>
-            <button class="btn btn-primary" onclick="openModal('deal')">+ Добавить</button>
+            <button class="btn btn-primary" onclick="openModal('deal')">+ Add</button>
           </div>
         </div>
         <div class="search-bar">
-          <input type="text" id="search-deals" placeholder="Поиск по названию или контакту..." oninput="filterDeals()" />
+          <input type="text" id="search-deals" placeholder="Search by title or contact..." oninput="filterDeals()" />
           <select id="filter-deals-status" onchange="filterDeals()">
-            <option value="">Все статусы</option>
-            <option value="new">Новые</option>
-            <option value="negotiation">Переговоры</option>
-            <option value="won">Выиграны</option>
-            <option value="lost">Проиграны</option>
+            <option value="">All statuses</option>
+            <option value="new">New</option>
+            <option value="negotiation">Negotiation</option>
+            <option value="won">Won</option>
+            <option value="lost">Lost</option>
           </select>
         </div>
         <table>
-          <thead><tr><th>Название</th><th>Контакт</th><th>Сумма</th><th>Статус</th><th></th></tr></thead>
+          <thead><tr><th>Title</th><th>Contact</th><th>Amount</th><th>Status</th><th></th></tr></thead>
           <tbody id="deals-body"></tbody>
         </table>
       </div>
@@ -395,29 +395,29 @@
     <div id="tab-tasks" style="display:none">
       <div class="card">
         <div class="card-header">
-          <h2>Все задачи</h2>
+          <h2>All Tasks</h2>
           <div class="export-btns">
             <button class="btn-export" onclick="exportCSV('tasks')">CSV</button>
             <button class="btn-export xlsx" onclick="exportXLSX('tasks')">Excel</button>
-            <button class="btn btn-primary" onclick="openModal('task')">+ Добавить</button>
+            <button class="btn btn-primary" onclick="openModal('task')">+ Add</button>
           </div>
         </div>
         <div class="search-bar">
-          <input type="text" id="search-tasks" placeholder="Поиск по описанию или контакту..." oninput="filterTasks()" />
+          <input type="text" id="search-tasks" placeholder="Search by description or contact..." oninput="filterTasks()" />
           <select id="filter-tasks-status" onchange="filterTasks()">
-            <option value="">Все статусы</option>
-            <option value="pending">В ожидании</option>
-            <option value="done">Выполнено</option>
+            <option value="">All statuses</option>
+            <option value="pending">Pending</option>
+            <option value="done">Done</option>
           </select>
           <select id="filter-tasks-deadline" onchange="filterTasks()">
-            <option value="">Все дедлайны</option>
-            <option value="overdue">Просроченные</option>
-            <option value="today">Сегодня</option>
-            <option value="week">На этой неделе</option>
+            <option value="">All deadlines</option>
+            <option value="overdue">Overdue</option>
+            <option value="today">Today</option>
+            <option value="week">This week</option>
           </select>
         </div>
         <table>
-          <thead><tr><th>Описание</th><th>Контакт</th><th>Дедлайн</th><th>Статус</th><th></th></tr></thead>
+          <thead><tr><th>Description</th><th>Contact</th><th>Deadline</th><th>Status</th><th></th></tr></thead>
           <tbody id="tasks-body"></tbody>
         </table>
       </div>
@@ -428,12 +428,12 @@
       <div class="card" style="height:100%; display:flex; flex-direction:column;">
         <div class="chat-wrap">
           <div class="chat-messages" id="chat-messages">
-            <div class="msg msg-assistant">Привет! Я ваш CRM-ассистент. Могу помочь с анализом контактов, сделок и задач. Спрашивайте!</div>
+            <div class="msg msg-assistant">Hello! I'm your CRM assistant. I can help you analyze contacts, deals and tasks. Ask me anything!</div>
           </div>
           <div class="chat-input-row">
-            <button class="btn-mic" id="mic-btn" onclick="toggleMic()" title="Голосовой ввод">🎤</button>
-            <input type="text" id="chat-input" placeholder="Напишите или скажите что-нибудь..." onkeydown="if(event.key==='Enter') sendMessage()" />
-            <button class="btn btn-primary" onclick="sendMessage()">Отправить</button>
+            <button class="btn-mic" id="mic-btn" onclick="toggleMic()" title="Voice input">🎤</button>
+            <input type="text" id="chat-input" placeholder="Type or say something..." onkeydown="if(event.key==='Enter') sendMessage()" />
+            <button class="btn btn-primary" onclick="sendMessage()">Send</button>
           </div>
         </div>
       </div>
@@ -445,15 +445,15 @@
 <!-- Modal: Contact -->
 <div class="modal-overlay" id="modal-contact">
   <div class="modal">
-    <h3 id="modal-contact-title">Новый контакт</h3>
+    <h3 id="modal-contact-title">New Contact</h3>
     <input type="hidden" id="contact-id" />
-    <div class="form-group"><label>Имя</label><input type="text" id="contact-name" /></div>
+    <div class="form-group"><label>Name</label><input type="text" id="contact-name" /></div>
     <div class="form-group"><label>Email</label><input type="email" id="contact-email" /></div>
-    <div class="form-group"><label>Телефон</label><input type="text" id="contact-phone" /></div>
-    <div class="form-group"><label>Компания</label><input type="text" id="contact-company" /></div>
+    <div class="form-group"><label>Phone</label><input type="text" id="contact-phone" /></div>
+    <div class="form-group"><label>Company</label><input type="text" id="contact-company" /></div>
     <div class="modal-actions">
-      <button class="btn btn-cancel" onclick="closeModal('contact')">Отмена</button>
-      <button class="btn btn-primary" onclick="saveContact()">Сохранить</button>
+      <button class="btn btn-cancel" onclick="closeModal('contact')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveContact()">Save</button>
     </div>
   </div>
 </div>
@@ -461,22 +461,22 @@
 <!-- Modal: Deal -->
 <div class="modal-overlay" id="modal-deal">
   <div class="modal">
-    <h3 id="modal-deal-title">Новая сделка</h3>
+    <h3 id="modal-deal-title">New Deal</h3>
     <input type="hidden" id="deal-id" />
-    <div class="form-group"><label>Название</label><input type="text" id="deal-title" /></div>
-    <div class="form-group"><label>Контакт</label><select id="deal-contact"></select></div>
-    <div class="form-group"><label>Сумма (₽)</label><input type="number" id="deal-amount" /></div>
-    <div class="form-group"><label>Статус</label>
+    <div class="form-group"><label>Title</label><input type="text" id="deal-title" /></div>
+    <div class="form-group"><label>Contact</label><select id="deal-contact"></select></div>
+    <div class="form-group"><label>Amount (₽)</label><input type="number" id="deal-amount" /></div>
+    <div class="form-group"><label>Status</label>
       <select id="deal-status">
-        <option value="new">Новая</option>
-        <option value="negotiation">Переговоры</option>
-        <option value="won">Выиграна</option>
-        <option value="lost">Проиграна</option>
+        <option value="new">New</option>
+        <option value="negotiation">Negotiation</option>
+        <option value="won">Won</option>
+        <option value="lost">Lost</option>
       </select>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-cancel" onclick="closeModal('deal')">Отмена</button>
-      <button class="btn btn-primary" onclick="saveDeal()">Сохранить</button>
+      <button class="btn btn-cancel" onclick="closeModal('deal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDeal()">Save</button>
     </div>
   </div>
 </div>
@@ -484,20 +484,20 @@
 <!-- Modal: Task -->
 <div class="modal-overlay" id="modal-task">
   <div class="modal">
-    <h3 id="modal-task-title">Новая задача</h3>
+    <h3 id="modal-task-title">New Task</h3>
     <input type="hidden" id="task-id" />
-    <div class="form-group"><label>Описание</label><input type="text" id="task-description" /></div>
-    <div class="form-group"><label>Контакт</label><select id="task-contact"></select></div>
-    <div class="form-group"><label>Дедлайн</label><input type="datetime-local" id="task-deadline" /></div>
-    <div class="form-group"><label>Статус</label>
+    <div class="form-group"><label>Description</label><input type="text" id="task-description" /></div>
+    <div class="form-group"><label>Contact</label><select id="task-contact"></select></div>
+    <div class="form-group"><label>Deadline</label><input type="datetime-local" id="task-deadline" /></div>
+    <div class="form-group"><label>Status</label>
       <select id="task-status">
-        <option value="pending">В ожидании</option>
-        <option value="done">Выполнено</option>
+        <option value="pending">Pending</option>
+        <option value="done">Done</option>
       </select>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-cancel" onclick="closeModal('task')">Отмена</button>
-      <button class="btn btn-primary" onclick="saveTask()">Сохранить</button>
+      <button class="btn btn-cancel" onclick="closeModal('task')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTask()">Save</button>
     </div>
   </div>
 </div>
@@ -506,7 +506,7 @@
 const API = 'http://localhost:3000';
 let contacts = [], deals = [], tasks = [];
 
-const tabs = { dashboard: 'Дашборд', contacts: 'Контакты', deals: 'Сделки', tasks: 'Задачи', chat: 'AI Ассистент' };
+const tabs = { dashboard: 'Dashboard', contacts: 'Contacts', deals: 'Deals', tasks: 'Tasks', chat: 'AI Assistant' };
 
 function showTab(name) {
   Object.keys(tabs).forEach(t => {
@@ -533,15 +533,15 @@ async function loadDashboard() {
   document.getElementById('stat-deals').textContent = d.length;
 
   const revenue = d.filter(x => x.status === 'won').reduce((s, x) => s + (x.amount || 0), 0);
-  document.getElementById('stat-revenue').textContent = revenue.toLocaleString('ru') + ' ₽';
+  document.getElementById('stat-revenue').textContent = revenue.toLocaleString('en') + ' ₽';
 
   const done = t.filter(x => x.status === 'done').length;
   document.getElementById('stat-tasks-done').textContent = `${done} / ${t.length}`;
-  document.getElementById('stat-tasks-sub').textContent = t.length ? `${Math.round(done/t.length*100)}% выполнено` : '';
+  document.getElementById('stat-tasks-sub').textContent = t.length ? `${Math.round(done/t.length*100)}% completed` : '';
 
   // Funnel
   const statuses = ['new', 'negotiation', 'won', 'lost'];
-  const labels   = ['Новые', 'Переговоры', 'Выиграны', 'Проиграны'];
+  const labels   = ['New', 'Negotiation', 'Won', 'Lost'];
   const counts   = statuses.map(s => d.filter(x => x.status === s).length);
   const colors   = ['#a5b4fc', '#6c63ff', '#4ade80', '#f87171'];
 
@@ -570,8 +570,8 @@ async function loadDashboard() {
 }
 
 function badge(status) {
-  const map = { new: ['badge-new','Новая'], won: ['badge-won','Выиграна'], lost: ['badge-lost','Проиграна'],
-    negotiation: ['badge-negotiation','Переговоры'], pending: ['badge-pending','В ожидании'], done: ['badge-done','Выполнено'] };
+  const map = { new: ['badge-new','New'], won: ['badge-won','Won'], lost: ['badge-lost','Lost'],
+    negotiation: ['badge-negotiation','Negotiation'], pending: ['badge-pending','Pending'], done: ['badge-done','Done'] };
   const [cls, label] = map[status] || ['badge-new', status];
   return `<span class="badge ${cls}">${label}</span>`;
 }
@@ -595,17 +595,17 @@ function closeModal(type) {
 function clearForm(type) {
   if (type === 'contact') {
     ['contact-id','contact-name','contact-email','contact-phone','contact-company'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('modal-contact-title').textContent = 'Новый контакт';
+    document.getElementById('modal-contact-title').textContent = 'New Contact';
   }
   if (type === 'deal') {
     ['deal-id','deal-title','deal-amount'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('deal-status').value = 'new';
-    document.getElementById('modal-deal-title').textContent = 'Новая сделка';
+    document.getElementById('modal-deal-title').textContent = 'New Deal';
   }
   if (type === 'task') {
     ['task-id','task-description','task-deadline'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('task-status').value = 'pending';
-    document.getElementById('modal-task-title').textContent = 'Новая задача';
+    document.getElementById('modal-task-title').textContent = 'New Task';
   }
 }
 
@@ -630,12 +630,12 @@ function editContact(id) {
   document.getElementById('contact-email').value = c.email || '';
   document.getElementById('contact-phone').value = c.phone || '';
   document.getElementById('contact-company').value = c.company || '';
-  document.getElementById('modal-contact-title').textContent = 'Изменить контакт';
+  document.getElementById('modal-contact-title').textContent = 'Edit Contact';
   openModal('contact');
 }
 
 async function deleteContact(id) {
-  if (!confirm('Удалить контакт?')) return;
+  if (!confirm('Delete contact?')) return;
   await fetch(`${API}/contacts/${id}`, { method: 'DELETE' });
   loadContacts();
 }
@@ -647,7 +647,7 @@ async function loadDeals() {
 }
 
 function populateContactSelects() {
-  const opts = `<option value="">— без контакта —</option>` + contacts.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  const opts = `<option value="">— no contact —</option>` + contacts.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
   document.getElementById('deal-contact').innerHTML = opts;
   document.getElementById('task-contact').innerHTML = opts;
 }
@@ -674,12 +674,12 @@ function editDeal(id) {
   document.getElementById('deal-amount').value = d.amount || '';
   document.getElementById('deal-status').value = d.status;
   document.getElementById('deal-contact').value = d.contact_id || '';
-  document.getElementById('modal-deal-title').textContent = 'Изменить сделку';
+  document.getElementById('modal-deal-title').textContent = 'Edit Deal';
   document.getElementById('modal-deal').classList.add('open');
 }
 
 async function deleteDeal(id) {
-  if (!confirm('Удалить сделку?')) return;
+  if (!confirm('Delete deal?')) return;
   await fetch(`${API}/deals/${id}`, { method: 'DELETE' });
   loadDeals();
 }
@@ -724,12 +724,12 @@ function editTask(id) {
   document.getElementById('task-deadline').value = t.deadline ? t.deadline.slice(0,16) : '';
   document.getElementById('task-status').value = t.status;
   document.getElementById('task-contact').value = t.contact_id || '';
-  document.getElementById('modal-task-title').textContent = 'Изменить задачу';
+  document.getElementById('modal-task-title').textContent = 'Edit Task';
   document.getElementById('modal-task').classList.add('open');
 }
 
 async function deleteTask(id) {
-  if (!confirm('Удалить задачу?')) return;
+  if (!confirm('Delete task?')) return;
   await fetch(`${API}/tasks/${id}`, { method: 'DELETE' });
   loadTasks();
 }
@@ -742,7 +742,7 @@ async function sendMessage() {
   input.value = '';
 
   appendMsg('user', text);
-  const loading = appendMsg('assistant', 'Печатает...', true);
+  const loading = appendMsg('assistant', 'Typing...', true);
 
   const res = await fetch(`${API}/chat`, {
     method: 'POST',
@@ -760,9 +760,9 @@ async function sendMessage() {
     if (affected.has('deal'))    { deals    = await fetch(`${API}/deals`).then(r => r.json()); }
     if (affected.has('task'))    { tasks    = await fetch(`${API}/tasks`).then(r => r.json()); }
     const currentTab = document.querySelector('.nav-item.active')?.textContent;
-    if (currentTab === 'Контакты') loadContacts();
-    if (currentTab === 'Сделки')   loadDeals();
-    if (currentTab === 'Задачи')   loadTasks();
+    if (currentTab === 'Contacts') loadContacts();
+    if (currentTab === 'Deals')   loadDeals();
+    if (currentTab === 'Tasks')   loadTasks();
   }
 }
 
@@ -787,10 +787,10 @@ function renderContacts(list) {
       <td>${c.phone || '—'}</td>
       <td>${c.company || '—'}</td>
       <td style="display:flex;gap:6px">
-        <button class="btn btn-edit" onclick="editContact(${c.id})">Изменить</button>
-        <button class="btn btn-danger" onclick="deleteContact(${c.id})">Удалить</button>
+        <button class="btn btn-edit" onclick="editContact(${c.id})">Edit</button>
+        <button class="btn btn-danger" onclick="deleteContact(${c.id})">Delete</button>
       </td>
-    </tr>`).join('') : '<tr><td colspan="5" class="empty">Ничего не найдено</td></tr>';
+    </tr>`).join('') : '<tr><td colspan="5" class="empty">No contacts</td></tr>';
 }
 
 function filterContacts() {
@@ -806,13 +806,13 @@ function renderDeals(list) {
     <tr>
       <td>${d.title}</td>
       <td>${d.contact_name || '—'}</td>
-      <td>${d.amount ? d.amount.toLocaleString('ru') + ' ₽' : '—'}</td>
+      <td>${d.amount ? d.amount.toLocaleString('en') + ' ₽' : '—'}</td>
       <td>${badge(d.status)}</td>
       <td style="display:flex;gap:6px">
-        <button class="btn btn-edit" onclick="editDeal(${d.id})">Изменить</button>
-        <button class="btn btn-danger" onclick="deleteDeal(${d.id})">Удалить</button>
+        <button class="btn btn-edit" onclick="editDeal(${d.id})">Edit</button>
+        <button class="btn btn-danger" onclick="deleteDeal(${d.id})">Delete</button>
       </td>
-    </tr>`).join('') : '<tr><td colspan="5" class="empty">Ничего не найдено</td></tr>';
+    </tr>`).join('') : '<tr><td colspan="5" class="empty">No deals</td></tr>';
 }
 
 function filterDeals() {
@@ -832,16 +832,16 @@ function renderTasks(list) {
     const overdue = t.status !== 'done' && t.deadline && new Date(t.deadline) < now;
     return `
     <tr class="${overdue ? 'row-overdue' : ''}">
-      <td>${t.description}${overdue ? ' <span style="color:#ff6b6b;font-size:12px">просрочено</span>' : ''}</td>
+      <td>${t.description}${overdue ? ' <span style="color:#ff6b6b;font-size:12px">overdue</span>' : ''}</td>
       <td>${t.contact_name || '—'}</td>
-      <td>${t.deadline ? new Date(t.deadline).toLocaleString('ru') : '—'}</td>
+      <td>${t.deadline ? new Date(t.deadline).toLocaleString('en') : '—'}</td>
       <td>${badge(t.status)}</td>
       <td style="display:flex;gap:6px">
-        <button class="btn btn-edit" onclick="editTask(${t.id})">Изменить</button>
-        <button class="btn btn-danger" onclick="deleteTask(${t.id})">Удалить</button>
+        <button class="btn btn-edit" onclick="editTask(${t.id})">Edit</button>
+        <button class="btn btn-danger" onclick="deleteTask(${t.id})">Delete</button>
       </td>
     </tr>`;
-  }).join('') : '<tr><td colspan="5" class="empty">Ничего не найдено</td></tr>';
+  }).join('') : '<tr><td colspan="5" class="empty">No tasks</td></tr>';
 }
 
 function filterTasks() {
@@ -871,9 +871,9 @@ function filterTasks() {
 // --- Export ---
 
 const exportColumns = {
-  contacts: { Имя: 'name', Email: 'email', Телефон: 'phone', Компания: 'company', Дата: 'created_at' },
-  deals:    { Название: 'title', Контакт: 'contact_name', Сумма: 'amount', Статус: 'status', Дата: 'created_at' },
-  tasks:    { Описание: 'description', Контакт: 'contact_name', Дедлайн: 'deadline', Статус: 'status', Дата: 'created_at' },
+  contacts: { Name: 'name', Email: 'email', Phone: 'phone', Company: 'company', Date: 'created_at' },
+  deals:    { Title: 'title', Contact: 'contact_name', Amount: 'amount', Status: 'status', Date: 'created_at' },
+  tasks:    { Description: 'description', Contact: 'contact_name', Deadline: 'deadline', Status: 'status', Date: 'created_at' },
 };
 
 function getExportData(type) {
@@ -888,7 +888,7 @@ function getExportData(type) {
 
 function exportCSV(type) {
   const data = getExportData(type);
-  if (!data.length) return alert('Нет данных для экспорта');
+  if (!data.length) return alert('No data to export');
   const headers = Object.keys(data[0]);
   const rows = data.map(r => headers.map(h => `"${String(r[h]).replace(/"/g, '""')}"`).join(';'));
   const csv = '﻿' + [headers.join(';'), ...rows].join('\n');
@@ -897,7 +897,7 @@ function exportCSV(type) {
 
 function exportXLSX(type) {
   const data = getExportData(type);
-  if (!data.length) return alert('Нет данных для экспорта');
+  if (!data.length) return alert('No data to export');
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, type);
@@ -919,9 +919,9 @@ let isRecording = false;
 
 function initRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) { alert('Ваш браузер не поддерживает распознавание речи. Используйте Chrome или Edge.'); return null; }
+  if (!SpeechRecognition) { alert('Your browser does not support speech recognition. Please use Chrome or Edge.'); return null; }
   const r = new SpeechRecognition();
-  r.lang = 'ru-RU';
+  r.lang = 'en-US';
   r.interimResults = false;
   r.maxAlternatives = 1;
   r.onresult = (e) => {
@@ -943,25 +943,25 @@ function toggleMic() {
   isRecording = true;
   const btn = document.getElementById('mic-btn');
   btn.classList.add('recording');
-  btn.title = 'Остановить запись';
+  btn.title = 'Stop recording';
 }
 
 function stopRecording() {
   isRecording = false;
   const btn = document.getElementById('mic-btn');
   btn.classList.remove('recording');
-  btn.title = 'Голосовой ввод';
+  btn.title = 'Voice input';
   try { recognition?.stop(); } catch {}
 }
 
 function speak(text) {
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'ru-RU';
+  utterance.lang = 'en-US';
   utterance.rate = 1.05;
   const voices = window.speechSynthesis.getVoices();
-  const ruVoice = voices.find(v => v.lang.startsWith('ru'));
-  if (ruVoice) utterance.voice = ruVoice;
+  const enVoice = voices.find(v => v.lang.startsWith('en'));
+  if (enVoice) utterance.voice = enVoice;
   window.speechSynthesis.speak(utterance);
 }
 
@@ -983,13 +983,13 @@ async function checkDeadlines() {
     if (t.status === 'done' || !t.deadline) return;
     const dl = new Date(t.deadline);
     if (dl < now) {
-      new Notification('Просроченная задача', {
+      new Notification('Overdue task', {
         body: `${t.description}${t.contact_name ? ' — ' + t.contact_name : ''}`,
         icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⚠️</text></svg>',
       });
     } else if (dl >= today && dl < tomorrow) {
-      new Notification('Задача на сегодня', {
-        body: `${t.description}${t.contact_name ? ' — ' + t.contact_name : ''}\nДедлайн: ${dl.toLocaleTimeString('ru', {hour:'2-digit', minute:'2-digit'})}`,
+      new Notification('Task due today', {
+        body: `${t.description}${t.contact_name ? ' — ' + t.contact_name : ''}\nDeadline: ${dl.toLocaleTimeString('en', {hour:'2-digit', minute:'2-digit'})}`,
         icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔔</text></svg>',
       });
     }
