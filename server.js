@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const Groq = require('groq-sdk');
 const db = require('./database');
 
@@ -14,41 +15,79 @@ const JWT_SECRET = process.env.JWT_SECRET || 'crm-secret';
 
 // --- Auth ---
 
+// Seed first admin from env vars if no users exist
+if (db.prepare('SELECT COUNT(*) as n FROM users').get().n === 0) {
+  const hash = bcrypt.hashSync(process.env.CRM_PASSWORD || 'admin', 10);
+  db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)').run(
+    process.env.CRM_USERNAME || 'admin', hash, 'admin'
+  );
+  console.log(`Created admin user: ${process.env.CRM_USERNAME || 'admin'}`);
+}
+
 app.post('/auth/login', (req, res) => {
   const { username, password } = req.body;
-  if (username === process.env.CRM_USERNAME && password === process.env.CRM_PASSWORD) {
-    const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token });
-  } else {
-    res.status(401).json({ error: 'Invalid credentials' });
+  const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+  if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+    return res.status(401).json({ error: 'Invalid credentials' });
   }
+  const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+  res.json({ token, username: user.username, role: user.role });
 });
 
 function requireAuth(req, res, next) {
   const auth = req.headers['authorization'];
   if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
   try {
-    jwt.verify(auth.slice(7), JWT_SECRET);
+    req.user = jwt.verify(auth.slice(7), JWT_SECRET);
     next();
   } catch {
     res.status(401).json({ error: 'Invalid or expired token' });
   }
 }
 
+function requireAdmin(req, res, next) {
+  requireAuth(req, res, () => {
+    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+    next();
+  });
+}
+
+app.get('/auth/me', requireAuth, (req, res) => {
+  res.json({ id: req.user.id, username: req.user.username, role: req.user.role });
+});
+
 app.use(requireAuth);
 
 // --- Contacts ---
 
+function withTags(entities, junctionTable, fkField) {
+  if (!entities.length) return entities;
+  const rows = db.prepare(`
+    SELECT ct.${fkField}, t.id AS tag_id, t.name, t.color
+    FROM ${junctionTable} ct JOIN tags t ON ct.tag_id = t.id
+  `).all();
+  const map = {};
+  rows.forEach(r => { (map[r[fkField]] ||= []).push({ id: r.tag_id, name: r.name, color: r.color }); });
+  entities.forEach(e => { e.tags = map[e.id] || []; });
+  return entities;
+}
+
 app.get('/contacts', (req, res) => {
   const contacts = db.prepare('SELECT * FROM contacts ORDER BY created_at DESC').all();
-  res.json(contacts);
+  res.json(withTags(contacts, 'contact_tags', 'contact_id'));
 });
+
+function logActivity(action, entityType, entityId, entityName) {
+  db.prepare('INSERT INTO activity_log (action, entity_type, entity_id, entity_name) VALUES (?, ?, ?, ?)')
+    .run(action, entityType, entityId ?? null, entityName ?? null);
+}
 
 app.post('/contacts', (req, res) => {
   const { name, email, phone, company } = req.body;
   const result = db.prepare(
     'INSERT INTO contacts (name, email, phone, company) VALUES (?, ?, ?, ?)'
   ).run(name, email, phone, company);
+  logActivity('created', 'contact', result.lastInsertRowid, name);
   res.json({ id: result.lastInsertRowid });
 });
 
@@ -57,11 +96,14 @@ app.put('/contacts/:id', (req, res) => {
   db.prepare(
     'UPDATE contacts SET name=?, email=?, phone=?, company=? WHERE id=?'
   ).run(name, email, phone, company, req.params.id);
+  logActivity('updated', 'contact', req.params.id, name);
   res.json({ success: true });
 });
 
 app.delete('/contacts/:id', (req, res) => {
+  const row = db.prepare('SELECT name FROM contacts WHERE id=?').get(req.params.id);
   db.prepare('DELETE FROM contacts WHERE id=?').run(req.params.id);
+  logActivity('deleted', 'contact', req.params.id, row?.name);
   res.json({ success: true });
 });
 
@@ -73,7 +115,7 @@ app.get('/deals', (req, res) => {
     FROM deals LEFT JOIN contacts ON deals.contact_id = contacts.id
     ORDER BY deals.created_at DESC
   `).all();
-  res.json(deals);
+  res.json(withTags(deals, 'deal_tags', 'deal_id'));
 });
 
 app.post('/deals', (req, res) => {
@@ -81,6 +123,7 @@ app.post('/deals', (req, res) => {
   const result = db.prepare(
     'INSERT INTO deals (title, amount, status, contact_id) VALUES (?, ?, ?, ?)'
   ).run(title, amount, status || 'new', contact_id);
+  logActivity('created', 'deal', result.lastInsertRowid, title);
   res.json({ id: result.lastInsertRowid });
 });
 
@@ -89,11 +132,14 @@ app.put('/deals/:id', (req, res) => {
   db.prepare(
     'UPDATE deals SET title=?, amount=?, status=?, contact_id=? WHERE id=?'
   ).run(title, amount, status, contact_id, req.params.id);
+  logActivity('updated', 'deal', req.params.id, title);
   res.json({ success: true });
 });
 
 app.delete('/deals/:id', (req, res) => {
+  const row = db.prepare('SELECT title FROM deals WHERE id=?').get(req.params.id);
   db.prepare('DELETE FROM deals WHERE id=?').run(req.params.id);
+  logActivity('deleted', 'deal', req.params.id, row?.title);
   res.json({ success: true });
 });
 
@@ -113,6 +159,7 @@ app.post('/tasks', (req, res) => {
   const result = db.prepare(
     'INSERT INTO tasks (description, deadline, status, contact_id) VALUES (?, ?, ?, ?)'
   ).run(description, deadline, status || 'pending', contact_id);
+  logActivity('created', 'task', result.lastInsertRowid, description);
   res.json({ id: result.lastInsertRowid });
 });
 
@@ -121,11 +168,14 @@ app.put('/tasks/:id', (req, res) => {
   db.prepare(
     'UPDATE tasks SET description=?, deadline=?, status=?, contact_id=? WHERE id=?'
   ).run(description, deadline, status, contact_id, req.params.id);
+  logActivity('updated', 'task', req.params.id, description);
   res.json({ success: true });
 });
 
 app.delete('/tasks/:id', (req, res) => {
+  const row = db.prepare('SELECT description FROM tasks WHERE id=?').get(req.params.id);
   db.prepare('DELETE FROM tasks WHERE id=?').run(req.params.id);
+  logActivity('deleted', 'task', req.params.id, row?.description);
   res.json({ success: true });
 });
 
@@ -342,43 +392,64 @@ function executeTool(name, args) {
   if (args.contact_id != null) args.contact_id = Number(args.contact_id);
   if (args.amount     != null) args.amount     = Number(args.amount);
   switch (name) {
-    case 'create_contact':
-      return { id: db.prepare('INSERT INTO contacts (name, email, phone, company) VALUES (?, ?, ?, ?)').run(args.name, args.email ?? null, args.phone ?? null, args.company ?? null).lastInsertRowid };
+    case 'create_contact': {
+      const id = db.prepare('INSERT INTO contacts (name, email, phone, company) VALUES (?, ?, ?, ?)').run(args.name, args.email ?? null, args.phone ?? null, args.company ?? null).lastInsertRowid;
+      logActivity('created', 'contact', id, args.name);
+      return { id };
+    }
     case 'update_contact':
       db.prepare('UPDATE contacts SET name=?, email=?, phone=?, company=? WHERE id=?').run(args.name, args.email ?? null, args.phone ?? null, args.company ?? null, args.id);
+      logActivity('updated', 'contact', args.id, args.name);
       return { success: true };
-    case 'delete_contact':
+    case 'delete_contact': {
+      const row = db.prepare('SELECT name FROM contacts WHERE id=?').get(args.id);
       db.prepare('DELETE FROM contacts WHERE id=?').run(args.id);
+      logActivity('deleted', 'contact', args.id, row?.name);
       return { success: true };
-    case 'create_deal':
-      return { id: db.prepare('INSERT INTO deals (title, amount, status, contact_id) VALUES (?, ?, ?, ?)').run(args.title, args.amount ?? null, args.status ?? 'new', args.contact_id ?? null).lastInsertRowid };
+    }
+    case 'create_deal': {
+      const id = db.prepare('INSERT INTO deals (title, amount, status, contact_id) VALUES (?, ?, ?, ?)').run(args.title, args.amount ?? null, args.status ?? 'new', args.contact_id ?? null).lastInsertRowid;
+      logActivity('created', 'deal', id, args.title);
+      return { id };
+    }
     case 'update_deal':
       db.prepare('UPDATE deals SET title=?, amount=?, status=?, contact_id=? WHERE id=?').run(args.title, args.amount ?? null, args.status ?? 'new', args.contact_id ?? null, args.id);
+      logActivity('updated', 'deal', args.id, args.title);
       return { success: true };
-    case 'delete_deal':
+    case 'delete_deal': {
+      const row = db.prepare('SELECT title FROM deals WHERE id=?').get(args.id);
       db.prepare('DELETE FROM deals WHERE id=?').run(args.id);
+      logActivity('deleted', 'deal', args.id, row?.title);
       return { success: true };
-    case 'create_task':
-      return { id: db.prepare('INSERT INTO tasks (description, deadline, status, contact_id) VALUES (?, ?, ?, ?)').run(args.description, args.deadline ?? null, args.status ?? 'pending', args.contact_id ?? null).lastInsertRowid };
+    }
+    case 'create_task': {
+      const id = db.prepare('INSERT INTO tasks (description, deadline, status, contact_id) VALUES (?, ?, ?, ?)').run(args.description, args.deadline ?? null, args.status ?? 'pending', args.contact_id ?? null).lastInsertRowid;
+      logActivity('created', 'task', id, args.description);
+      return { id };
+    }
     case 'update_task':
       db.prepare('UPDATE tasks SET description=?, deadline=?, status=?, contact_id=? WHERE id=?').run(args.description, args.deadline ?? null, args.status ?? 'pending', args.contact_id ?? null, args.id);
+      logActivity('updated', 'task', args.id, args.description);
       return { success: true };
-    case 'delete_task':
+    case 'delete_task': {
+      const row = db.prepare('SELECT description FROM tasks WHERE id=?').get(args.id);
       db.prepare('DELETE FROM tasks WHERE id=?').run(args.id);
+      logActivity('deleted', 'task', args.id, row?.description);
       return { success: true };
+    }
     default:
       return { error: 'Unknown tool' };
   }
 }
 
 app.post('/chat', async (req, res) => {
-  const { message, contact_id } = req.body;
+  const { message, contact_id, deal_id } = req.body;
 
   const history = db.prepare(`
     SELECT role, content FROM messages
-    WHERE contact_id IS ?
+    WHERE contact_id IS ? AND deal_id IS ?
     ORDER BY created_at ASC LIMIT 50
-  `).all(contact_id ?? null);
+  `).all(contact_id ?? null, deal_id ?? null);
 
   const systemPrompt = `You are an internal CRM assistant. You have full access to the database of contacts, deals, and tasks. You can add, update, and delete any records upon user request. Always confirm exactly what you did in the database. Reply in English.
 Use tools for any database changes — do not describe actions in words, execute them.
@@ -389,7 +460,7 @@ Contacts: ${JSON.stringify(db.prepare('SELECT * FROM contacts').all())}
 Deals: ${JSON.stringify(db.prepare('SELECT * FROM deals').all())}
 Tasks: ${JSON.stringify(db.prepare('SELECT * FROM tasks').all())}`;
 
-  db.prepare('INSERT INTO messages (role, content, contact_id) VALUES (?, ?, ?)').run('user', message, contact_id ?? null);
+  db.prepare('INSERT INTO messages (role, content, contact_id, deal_id) VALUES (?, ?, ?, ?)').run('user', message, contact_id ?? null, deal_id ?? null);
 
   const messages = [
     { role: 'system', content: systemPrompt },
@@ -437,9 +508,101 @@ Tasks: ${JSON.stringify(db.prepare('SELECT * FROM tasks').all())}`;
   }
 
   const reply = response.choices[0].message.content;
-  db.prepare('INSERT INTO messages (role, content, contact_id) VALUES (?, ?, ?)').run('assistant', reply, contact_id ?? null);
+  db.prepare('INSERT INTO messages (role, content, contact_id, deal_id) VALUES (?, ?, ?, ?)').run('assistant', reply, contact_id ?? null, deal_id ?? null);
 
   res.json({ reply, toolsUsed });
+});
+
+// --- Users ---
+
+app.get('/users', requireAdmin, (req, res) => {
+  res.json(db.prepare('SELECT id, username, role, created_at FROM users ORDER BY created_at ASC').all());
+});
+
+app.post('/users', requireAdmin, (req, res) => {
+  const { username, password, role } = req.body;
+  if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+  try {
+    const hash = bcrypt.hashSync(password, 10);
+    const result = db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)').run(username, hash, role === 'admin' ? 'admin' : 'user');
+    res.json({ id: result.lastInsertRowid });
+  } catch {
+    res.status(409).json({ error: 'Username already exists' });
+  }
+});
+
+app.delete('/users/:id', requireAdmin, (req, res) => {
+  if (Number(req.params.id) === req.user.id) return res.status(400).json({ error: 'Cannot delete yourself' });
+  db.prepare('DELETE FROM users WHERE id=?').run(req.params.id);
+  res.json({ success: true });
+});
+
+app.put('/users/:id/password', requireAuth, (req, res) => {
+  const targetId = Number(req.params.id);
+  if (req.user.role !== 'admin' && req.user.id !== targetId) return res.status(403).json({ error: 'Forbidden' });
+  const { current_password, new_password } = req.body;
+  if (!new_password || new_password.length < 4) return res.status(400).json({ error: 'New password too short' });
+  const user = db.prepare('SELECT * FROM users WHERE id=?').get(targetId);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  if (req.user.role !== 'admin' && !bcrypt.compareSync(current_password, user.password_hash)) {
+    return res.status(401).json({ error: 'Current password is incorrect' });
+  }
+  db.prepare('UPDATE users SET password_hash=? WHERE id=?').run(bcrypt.hashSync(new_password, 10), targetId);
+  res.json({ success: true });
+});
+
+// --- Tags ---
+
+app.get('/tags', (req, res) => {
+  res.json(db.prepare('SELECT * FROM tags ORDER BY name ASC').all());
+});
+
+app.post('/tags', (req, res) => {
+  const { name, color } = req.body;
+  try {
+    const result = db.prepare('INSERT INTO tags (name, color) VALUES (?, ?)').run(name, color || 'blue');
+    res.json({ id: result.lastInsertRowid });
+  } catch {
+    res.status(409).json({ error: 'Tag name already exists' });
+  }
+});
+
+app.delete('/tags/:id', (req, res) => {
+  db.prepare('DELETE FROM tags WHERE id=?').run(req.params.id);
+  res.json({ success: true });
+});
+
+app.post('/contacts/:id/tags', (req, res) => {
+  const { tag_id } = req.body;
+  try { db.prepare('INSERT INTO contact_tags (contact_id, tag_id) VALUES (?, ?)').run(req.params.id, tag_id); } catch {}
+  res.json({ success: true });
+});
+
+app.delete('/contacts/:id/tags/:tag_id', (req, res) => {
+  db.prepare('DELETE FROM contact_tags WHERE contact_id=? AND tag_id=?').run(req.params.id, req.params.tag_id);
+  res.json({ success: true });
+});
+
+app.post('/deals/:id/tags', (req, res) => {
+  const { tag_id } = req.body;
+  try { db.prepare('INSERT INTO deal_tags (deal_id, tag_id) VALUES (?, ?)').run(req.params.id, tag_id); } catch {}
+  res.json({ success: true });
+});
+
+app.delete('/deals/:id/tags/:tag_id', (req, res) => {
+  db.prepare('DELETE FROM deal_tags WHERE deal_id=? AND tag_id=?').run(req.params.id, req.params.tag_id);
+  res.json({ success: true });
+});
+
+// --- Activity Log ---
+
+app.get('/activity', (req, res) => {
+  const { entity_type } = req.query;
+  let query = 'SELECT * FROM activity_log';
+  const params = [];
+  if (entity_type) { query += ' WHERE entity_type = ?'; params.push(entity_type); }
+  query += ' ORDER BY created_at DESC LIMIT 100';
+  res.json(db.prepare(query).all(...params));
 });
 
 app.use((err, req, res, next) => {
@@ -450,11 +613,11 @@ app.use((err, req, res, next) => {
 // --- Messages history ---
 
 app.get('/messages', (req, res) => {
-  const { contact_id } = req.query;
+  const { contact_id, deal_id } = req.query;
   const messages = db.prepare(`
-    SELECT * FROM messages WHERE contact_id IS ?
+    SELECT * FROM messages WHERE contact_id IS ? AND deal_id IS ?
     ORDER BY created_at ASC
-  `).all(contact_id ?? null);
+  `).all(contact_id ?? null, deal_id ?? null);
   res.json(messages);
 });
 

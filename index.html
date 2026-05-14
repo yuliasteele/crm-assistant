@@ -309,6 +309,46 @@
     .btn-mic.recording { background: #ff6b6b; color: #fff; animation: pulse 1s infinite; }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
 
+    /* Users */
+    .topbar-user { font-size: 13px; color: #888; display: flex; align-items: center; gap: 12px; }
+    .topbar-username { font-weight: 600; color: #1a1a2e; }
+    .role-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+    .role-admin { background: #e9d8fd; color: #6741d9; }
+    .role-user  { background: #e8f0fe; color: #1864ab; }
+    .user-row-self td { background: #f9f9ff !important; }
+
+    /* Tags */
+    .tag-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 20px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+    .tag-remove { cursor: pointer; font-size: 14px; line-height: 1; opacity: 0.6; }
+    .tag-remove:hover { opacity: 1; }
+    .tags-wrap { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+    .tag-manager { margin-top: 12px; }
+    .tag-manager-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+    .tag-manager-row input { padding: 7px 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; outline: none; width: 160px; }
+    .tag-manager-row input:focus { border-color: #6c63ff; }
+    .color-swatches { display: flex; gap: 5px; }
+    .color-swatch { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s; }
+    .color-swatch:hover { transform: scale(1.2); }
+    .color-swatch.selected { border-color: #333; transform: scale(1.15); }
+    .tag-add-section { margin-top: 10px; }
+    .tag-add-select { padding: 7px 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; outline: none; background: #fafafa; }
+    .tag-add-select:focus { border-color: #6c63ff; }
+
+    /* Activity */
+    .activity-item { display: flex; gap: 14px; padding: 14px 0; border-top: 1px solid #f0f0f0; align-items: flex-start; }
+    .activity-item:first-child { border-top: none; }
+    .activity-dot { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+    .dot-created { background: #d3f9d8; }
+    .dot-updated { background: #e8f0fe; }
+    .dot-deleted { background: #ffe3e3; }
+    .activity-body { flex: 1; }
+    .activity-text { font-size: 14px; color: #1a1a2e; line-height: 1.4; }
+    .activity-text strong { font-weight: 600; }
+    .activity-time { font-size: 12px; color: #bbb; margin-top: 3px; }
+    .activity-filter { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+    .btn-filter { background: #f0f0f0; color: #555; border: none; border-radius: 20px; padding: 6px 14px; font-size: 13px; cursor: pointer; font-weight: 500; transition: background 0.2s, color 0.2s; }
+    .btn-filter.active { background: #6c63ff; color: #fff; }
+
     /* Login */
     .login-screen {
       position: fixed; inset: 0; background: #f0f2f5;
@@ -383,6 +423,70 @@
     .kanban-card-contact { font-size: 12px; color: #999; margin-bottom: 5px; }
     .kanban-card-amount { font-size: 13px; font-weight: 600; color: #6c63ff; }
     .kanban-card-actions { display: flex; gap: 6px; margin-top: 10px; }
+    /* Hamburger */
+    .hamburger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 4px; flex-shrink: 0; }
+    .hamburger span { display: block; width: 22px; height: 2px; background: #1a1a2e; border-radius: 2px; transition: all 0.25s; }
+
+    /* Sidebar overlay */
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 150; }
+    .sidebar-overlay.show { display: block; }
+
+    /* ── Tablet (≤ 768px) ── */
+    @media (max-width: 768px) {
+      body { overflow: auto; flex-direction: column; height: auto; }
+
+      .hamburger { display: flex; }
+
+      .sidebar {
+        position: fixed; top: 0; left: -240px; height: 100%;
+        z-index: 200; width: 220px;
+        transition: left 0.25s ease; box-shadow: none;
+      }
+      .sidebar.open { left: 0; box-shadow: 4px 0 20px rgba(0,0,0,0.25); }
+
+      .main { flex: 1; display: flex; flex-direction: column; width: 100%; min-height: 100vh; }
+
+      .topbar { padding: 12px 16px; flex-shrink: 0; }
+      .topbar-user { gap: 8px; }
+      .topbar-username { display: none; }
+
+      .content { padding: 14px; overflow-y: auto; }
+
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .charts-grid { grid-template-columns: 1fr; }
+      .profile-info-grid { grid-template-columns: repeat(2, 1fr); }
+
+      table { min-width: 480px; }
+      .card { overflow-x: auto; }
+
+      .search-bar { flex-wrap: wrap; }
+      .export-btns { flex-wrap: wrap; gap: 6px; }
+      .card-header { flex-wrap: wrap; gap: 10px; }
+
+      .kanban-board { overflow-x: auto; padding-bottom: 12px; }
+      .kanban-col { min-width: 200px; }
+
+      .import-modal { width: 95vw; }
+      .modal { max-height: 90vh; overflow-y: auto; }
+
+      #tab-chat { height: calc(100vh - 60px); }
+    }
+
+    /* ── Phone (≤ 480px) ── */
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .stat-card { padding: 14px 16px; }
+      .stat-card .value { font-size: 22px; }
+      .profile-info-grid { grid-template-columns: 1fr; }
+      .charts-grid .chart-card { padding: 14px 16px; }
+      .content { padding: 10px; }
+      .card { padding: 14px 12px; }
+      .modal { padding: 20px 16px; width: calc(100vw - 20px); }
+      .export-btns .btn-export { font-size: 11px; padding: 5px 10px; }
+      .profile-header { flex-wrap: wrap; }
+      .topbar { padding: 10px 12px; }
+      .view-toggle { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -393,14 +497,29 @@
   <div class="nav-item" onclick="showTab('contacts')">Contacts</div>
   <div class="nav-item" onclick="showTab('deals')">Deals</div>
   <div class="nav-item" onclick="showTab('tasks')" id="nav-tasks">Tasks</div>
+  <div class="nav-item" onclick="showTab('activity')">Activity</div>
   <div class="nav-item" onclick="showTab('chat')">AI Assistant</div>
+  <div class="nav-item" id="nav-users" onclick="showTab('users')" style="display:none;margin-top:auto;border-top:1px solid #2e2e4d">Users</div>
 </div>
 
 <div class="main">
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
   <div class="topbar">
-    <span id="topbar-title">Contacts</span>
-    <button class="btn-export" onclick="logout()" style="font-size:13px">Sign out</button>
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <span id="topbar-title">Contacts</span>
+    </div>
+    <div class="topbar-user">
+      <span class="topbar-username" id="topbar-username"></span>
+      <span class="role-badge" id="topbar-role"></span>
+      <button class="btn-export" onclick="openChangePassword()" style="font-size:13px">Password</button>
+      <button class="btn-export" onclick="logout()" style="font-size:13px">Sign out</button>
+    </div>
   </div>
+
 
   <div class="content">
 
@@ -432,9 +551,12 @@
         </div>
         <div class="search-bar">
           <input type="text" id="search-contacts" placeholder="Search by name, email, company..." oninput="filterContacts()" />
+          <select id="filter-contacts-tag" onchange="filterContacts()">
+            <option value="">All tags</option>
+          </select>
         </div>
         <table>
-          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Company</th><th></th></tr></thead>
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Company</th><th>Tags</th><th></th></tr></thead>
           <tbody id="contacts-body"></tbody>
         </table>
       </div>
@@ -457,6 +579,26 @@
         <div class="profile-info-item"><div class="label">Email</div><div class="value" id="profile-email">—</div></div>
         <div class="profile-info-item"><div class="label">Phone</div><div class="value" id="profile-phone">—</div></div>
         <div class="profile-info-item"><div class="label">Added</div><div class="value" id="profile-since">—</div></div>
+      </div>
+
+      <div class="profile-section">
+        <h3>Tags</h3>
+        <div id="profile-tags-wrap" class="tags-wrap"></div>
+        <div class="tag-manager">
+          <div class="tag-add-section">
+            <div class="tag-manager-row">
+              <select id="profile-tag-select" class="tag-add-select">
+                <option value="">Add existing tag...</option>
+              </select>
+              <button class="btn btn-edit" onclick="addTagToContact()">+ Add</button>
+            </div>
+            <div class="tag-manager-row" style="margin-top:8px">
+              <input type="text" id="new-tag-name" placeholder="New tag name..." />
+              <div class="color-swatches" id="contact-color-swatches"></div>
+              <button class="btn btn-primary" style="padding:7px 14px;font-size:13px" onclick="createAndAddTagToContact()">Create</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="profile-section">
@@ -490,6 +632,71 @@
       </div>
     </div>
 
+    <!-- Deal Detail -->
+    <div id="tab-deal-detail" style="display:none">
+      <button class="profile-back" onclick="backToDeals()">&#8592; Back to Deals</button>
+
+      <div class="profile-header" style="margin-top:18px">
+        <div class="profile-avatar" id="deal-detail-icon" style="border-radius:10px;font-size:18px">💼</div>
+        <div style="flex:1">
+          <div class="profile-name" id="deal-detail-title"></div>
+          <div id="deal-detail-status-wrap" style="margin-top:6px"></div>
+        </div>
+        <button class="btn btn-edit" id="deal-detail-edit-btn">Edit</button>
+      </div>
+
+      <div class="profile-info-grid">
+        <div class="profile-info-item"><div class="label">Amount</div><div class="value" id="deal-detail-amount">—</div></div>
+        <div class="profile-info-item"><div class="label">Contact</div><div class="value" id="deal-detail-contact">—</div></div>
+        <div class="profile-info-item"><div class="label">Created</div><div class="value" id="deal-detail-created">—</div></div>
+      </div>
+
+      <div class="profile-section">
+        <h3>Tags</h3>
+        <div id="deal-tags-wrap" class="tags-wrap"></div>
+        <div class="tag-manager">
+          <div class="tag-add-section">
+            <div class="tag-manager-row">
+              <select id="deal-tag-select" class="tag-add-select">
+                <option value="">Add existing tag...</option>
+              </select>
+              <button class="btn btn-edit" onclick="addTagToDeal()">+ Add</button>
+            </div>
+            <div class="tag-manager-row" style="margin-top:8px">
+              <input type="text" id="deal-new-tag-name" placeholder="New tag name..." />
+              <div class="color-swatches" id="deal-color-swatches"></div>
+              <button class="btn btn-primary" style="padding:7px 14px;font-size:13px" onclick="createAndAddTagToDeal()">Create</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-section">
+        <h3>Tasks</h3>
+        <div id="deal-detail-tasks"></div>
+      </div>
+
+      <div class="profile-section">
+        <h3>Notes</h3>
+        <div id="deal-detail-notes-list"></div>
+        <div class="note-add">
+          <textarea id="deal-note-input" placeholder="Add a note..."></textarea>
+          <button class="btn btn-primary note-add-btn" onclick="addDealNote()">Add</button>
+        </div>
+      </div>
+
+      <div class="profile-section">
+        <h3>Chat history</h3>
+        <div class="profile-chat">
+          <div class="chat-messages profile-chat-messages" id="deal-chat-messages"></div>
+          <div class="chat-input-row">
+            <input type="text" id="deal-chat-input" placeholder="Message about this deal..." onkeydown="if(event.key==='Enter') sendDealMessage()" />
+            <button class="btn btn-primary" onclick="sendDealMessage()">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Deals -->
     <div id="tab-deals" style="display:none">
       <div class="card">
@@ -517,9 +724,12 @@
               <option value="won">Won</option>
               <option value="lost">Lost</option>
             </select>
+            <select id="filter-deals-tag" onchange="filterDeals()">
+              <option value="">All tags</option>
+            </select>
           </div>
           <table>
-            <thead><tr><th>Title</th><th>Contact</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th>Title</th><th>Contact</th><th>Amount</th><th>Status</th><th>Tags</th><th></th></tr></thead>
             <tbody id="deals-body"></tbody>
           </table>
         </div>
@@ -578,6 +788,36 @@
           <thead><tr><th>Description</th><th>Contact</th><th>Deadline</th><th>Status</th><th></th></tr></thead>
           <tbody id="tasks-body"></tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Users -->
+    <div id="tab-users" style="display:none">
+      <div class="card">
+        <div class="card-header">
+          <h2>User Management</h2>
+          <button class="btn btn-primary" onclick="openModal('new-user')">+ Add User</button>
+        </div>
+        <table>
+          <thead><tr><th>Username</th><th>Role</th><th>Created</th><th></th></tr></thead>
+          <tbody id="users-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Activity -->
+    <div id="tab-activity" style="display:none">
+      <div class="card">
+        <div class="card-header">
+          <h2>Activity Log</h2>
+        </div>
+        <div class="activity-filter">
+          <button class="btn-filter active" onclick="setActivityFilter('')">All</button>
+          <button class="btn-filter" onclick="setActivityFilter('contact')">Contacts</button>
+          <button class="btn-filter" onclick="setActivityFilter('deal')">Deals</button>
+          <button class="btn-filter" onclick="setActivityFilter('task')">Tasks</button>
+        </div>
+        <div id="activity-list"><div class="empty">No activity yet</div></div>
       </div>
     </div>
 
@@ -660,6 +900,41 @@
   </div>
 </div>
 
+<!-- Modal: New User -->
+<div class="modal-overlay" id="modal-new-user">
+  <div class="modal">
+    <h3>Add User</h3>
+    <div class="form-group"><label>Username</label><input type="text" id="new-user-username" /></div>
+    <div class="form-group"><label>Password</label><input type="password" id="new-user-password" /></div>
+    <div class="form-group"><label>Role</label>
+      <select id="new-user-role">
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div class="login-error" id="new-user-error"></div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('new-user')">Cancel</button>
+      <button class="btn btn-primary" onclick="createUser()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Change Password -->
+<div class="modal-overlay" id="modal-change-password">
+  <div class="modal">
+    <h3>Change Password</h3>
+    <div class="form-group" id="current-password-group"><label>Current password</label><input type="password" id="cp-current" /></div>
+    <div class="form-group"><label>New password</label><input type="password" id="cp-new" /></div>
+    <div class="form-group"><label>Confirm new password</label><input type="password" id="cp-confirm" /></div>
+    <div class="login-error" id="cp-error"></div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('change-password')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePassword()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- Login Screen -->
 <div class="login-screen" id="login-screen" style="display:none">
   <div class="login-card">
@@ -732,6 +1007,9 @@ async function login() {
     const { token } = await res.json();
     localStorage.setItem('crm_token', token);
     hideLogin();
+    applyUserSession();
+    await loadAllTags();
+    populateTagFilters();
     showTab('dashboard');
     requestNotifications().then(checkDeadlines);
   } catch {
@@ -753,10 +1031,24 @@ async function apiFetch(url, opts = {}) {
   return res;
 }
 
-const tabs = { dashboard: 'Dashboard', contacts: 'Contacts', deals: 'Deals', tasks: 'Tasks', chat: 'AI Assistant' };
+const tabs = { dashboard: 'Dashboard', contacts: 'Contacts', deals: 'Deals', tasks: 'Tasks', activity: 'Activity', chat: 'AI Assistant', users: 'Users' };
+
+function toggleSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  const isOpen  = sidebar.classList.toggle('open');
+  overlay.classList.toggle('show', isOpen);
+}
+
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('show');
+}
 
 function showTab(name) {
+  closeSidebar();
   document.getElementById('tab-profile').style.display = 'none';
+  document.getElementById('tab-deal-detail').style.display = 'none';
   Object.keys(tabs).forEach(t => {
     document.getElementById('tab-' + t).style.display = t === name ? 'block' : 'none';
     document.querySelectorAll('.nav-item')[Object.keys(tabs).indexOf(t)].classList.toggle('active', t === name);
@@ -766,6 +1058,8 @@ function showTab(name) {
   if (name === 'contacts')  loadContacts();
   if (name === 'deals')     loadDeals();
   if (name === 'tasks')     loadTasks();
+  if (name === 'activity')  loadActivity();
+  if (name === 'users')     loadUsers();
 }
 
 let funnelChart = null, dealsChart = null;
@@ -893,6 +1187,7 @@ async function deleteContact(id) {
 let profileContactId = null;
 
 async function openContact(id) {
+  closeSidebar();
   profileContactId = id;
   const contact = contacts.find(c => c.id === id);
   if (!contact) return;
@@ -946,6 +1241,7 @@ async function openContact(id) {
   chatEl.scrollTop = chatEl.scrollHeight;
 
   document.getElementById('profile-chat-input').value = '';
+  renderContactTags(contact.tags || []);
 
   Object.keys(tabs).forEach(t => {
     document.getElementById('tab-' + t).style.display = 'none';
@@ -1073,6 +1369,131 @@ async function deleteDeal(id) {
   loadDeals();
 }
 
+// --- Deal Detail ---
+
+let dealDetailId = null;
+
+async function openDeal(id) {
+  closeSidebar();
+  dealDetailId = id;
+  const deal = deals.find(d => d.id === id);
+  if (!deal) return;
+
+  document.getElementById('deal-detail-title').textContent = deal.title;
+  document.getElementById('deal-detail-status-wrap').innerHTML = badge(deal.status);
+  document.getElementById('deal-detail-amount').textContent = deal.amount ? deal.amount.toLocaleString('en') + ' ₽' : '—';
+  document.getElementById('deal-detail-contact').textContent = deal.contact_name || '—';
+  document.getElementById('deal-detail-created').textContent = deal.created_at ? new Date(deal.created_at).toLocaleDateString('en') : '—';
+  document.getElementById('deal-detail-edit-btn').onclick = () => editDeal(id);
+  document.getElementById('deal-note-input').value = '';
+  document.getElementById('deal-chat-input').value = '';
+  renderDealTags(deal.tags || []);
+
+  const [allTasks, notes, messages] = await Promise.all([
+    apiFetch(`${API}/tasks`).then(r => r.json()),
+    apiFetch(`${API}/notes?deal_id=${id}`).then(r => r.json()),
+    apiFetch(`${API}/messages?deal_id=${id}`).then(r => r.json()),
+  ]);
+
+  const relatedTasks = deal.contact_id ? allTasks.filter(t => t.contact_id === deal.contact_id) : [];
+  document.getElementById('deal-detail-tasks').innerHTML = relatedTasks.length
+    ? `<table style="width:100%;font-size:13px;border-collapse:collapse">
+        <thead><tr><th style="text-align:left;padding:6px 8px;color:#888;font-weight:500">Description</th><th style="text-align:left;padding:6px 8px;color:#888;font-weight:500">Deadline</th><th style="text-align:left;padding:6px 8px;color:#888;font-weight:500">Status</th></tr></thead>
+        <tbody>${relatedTasks.map(t => `<tr>
+          <td style="padding:6px 8px;border-top:1px solid #f0f0f0">${t.description}</td>
+          <td style="padding:6px 8px;border-top:1px solid #f0f0f0">${t.deadline ? new Date(t.deadline).toLocaleDateString('en') : '—'}</td>
+          <td style="padding:6px 8px;border-top:1px solid #f0f0f0">${badge(t.status)}</td>
+        </tr>`).join('')}</tbody>
+      </table>`
+    : '<div class="profile-empty">No tasks linked to this deal\'s contact</div>';
+
+  renderDealNotes(notes);
+
+  const chatEl = document.getElementById('deal-chat-messages');
+  chatEl.innerHTML = messages.length
+    ? messages.map(m => `<div class="msg msg-${m.role}">${m.content}</div>`).join('')
+    : '<div style="color:#bbb;font-size:13px;text-align:center;padding:20px 0">No chat history yet</div>';
+  chatEl.scrollTop = chatEl.scrollHeight;
+
+  Object.keys(tabs).forEach(t => {
+    document.getElementById('tab-' + t).style.display = 'none';
+    document.querySelectorAll('.nav-item')[Object.keys(tabs).indexOf(t)].classList.remove('active');
+  });
+  document.getElementById('tab-deal-detail').style.display = 'block';
+  document.getElementById('topbar-title').textContent = deal.title;
+}
+
+function backToDeals() {
+  dealDetailId = null;
+  document.getElementById('tab-deal-detail').style.display = 'none';
+  showTab('deals');
+}
+
+function renderDealNotes(notes) {
+  document.getElementById('deal-detail-notes-list').innerHTML = notes.length
+    ? notes.map(n => `
+        <div class="note-item">
+          <div class="note-body">
+            <div class="note-content">${n.content.replace(/</g,'&lt;')}</div>
+            <div class="note-meta">${new Date(n.created_at).toLocaleString('en')}</div>
+          </div>
+          <button class="btn btn-danger" style="align-self:flex-start;flex-shrink:0" onclick="deleteDealNote(${n.id})">✕</button>
+        </div>`).join('')
+    : '<div class="profile-empty">No notes yet</div>';
+}
+
+async function addDealNote() {
+  const input = document.getElementById('deal-note-input');
+  const content = input.value.trim();
+  if (!content || !dealDetailId) return;
+  await apiFetch(`${API}/notes`, {
+    method: 'POST',
+    body: JSON.stringify({ content, deal_id: dealDetailId }),
+  });
+  input.value = '';
+  const notes = await apiFetch(`${API}/notes?deal_id=${dealDetailId}`).then(r => r.json());
+  renderDealNotes(notes);
+}
+
+async function deleteDealNote(id) {
+  await apiFetch(`${API}/notes/${id}`, { method: 'DELETE' });
+  const notes = await apiFetch(`${API}/notes?deal_id=${dealDetailId}`).then(r => r.json());
+  renderDealNotes(notes);
+}
+
+async function sendDealMessage() {
+  const input = document.getElementById('deal-chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  const chatEl = document.getElementById('deal-chat-messages');
+  const userMsg = document.createElement('div');
+  userMsg.className = 'msg msg-user';
+  userMsg.textContent = text;
+  chatEl.appendChild(userMsg);
+
+  const loadingMsg = document.createElement('div');
+  loadingMsg.className = 'msg msg-assistant msg-loading';
+  loadingMsg.textContent = 'Typing...';
+  chatEl.appendChild(loadingMsg);
+  chatEl.scrollTop = chatEl.scrollHeight;
+
+  const res = await apiFetch(`${API}/chat`, {
+    method: 'POST',
+    body: JSON.stringify({ message: text, deal_id: dealDetailId }),
+  });
+  const data = await res.json();
+  loadingMsg.remove();
+
+  const aiMsg = document.createElement('div');
+  aiMsg.className = 'msg msg-assistant';
+  aiMsg.textContent = data.reply;
+  chatEl.appendChild(aiMsg);
+  chatEl.scrollTop = chatEl.scrollHeight;
+  speak(data.reply);
+}
+
 // --- Tasks ---
 async function loadTasks() {
   tasks = await apiFetch(`${API}/tasks`).then(r => r.json());
@@ -1175,42 +1596,49 @@ function renderContacts(list) {
       <td>${c.email || '—'}</td>
       <td>${c.phone || '—'}</td>
       <td>${c.company || '—'}</td>
+      <td><div class="tags-wrap">${tagsHtml(c.tags)}</div></td>
       <td style="display:flex;gap:6px">
         <button class="btn btn-edit" onclick="editContact(${c.id})">Edit</button>
         <button class="btn btn-danger" onclick="deleteContact(${c.id})">Delete</button>
       </td>
-    </tr>`).join('') : '<tr><td colspan="5" class="empty">No contacts</td></tr>';
+    </tr>`).join('') : '<tr><td colspan="6" class="empty">No contacts</td></tr>';
 }
 
 function filterContacts() {
-  const q = document.getElementById('search-contacts').value.toLowerCase();
-  renderContacts(contacts.filter(c =>
-    [c.name, c.email, c.phone, c.company].some(v => (v || '').toLowerCase().includes(q))
-  ));
+  const q      = document.getElementById('search-contacts').value.toLowerCase();
+  const tagId  = Number(document.getElementById('filter-contacts-tag').value);
+  renderContacts(contacts.filter(c => {
+    const matchQ = [c.name, c.email, c.phone, c.company].some(v => (v || '').toLowerCase().includes(q));
+    const matchT = !tagId || (c.tags || []).some(t => t.id === tagId);
+    return matchQ && matchT;
+  }));
 }
 
 function renderDeals(list) {
   const tbody = document.getElementById('deals-body');
   tbody.innerHTML = list.length ? list.map(d => `
     <tr>
-      <td>${d.title}</td>
+      <td><a href="#" style="color:#6c63ff;text-decoration:none;font-weight:500" onclick="openDeal(${d.id});return false">${d.title}</a></td>
       <td>${d.contact_name || '—'}</td>
       <td>${d.amount ? d.amount.toLocaleString('en') + ' ₽' : '—'}</td>
       <td>${badge(d.status)}</td>
+      <td><div class="tags-wrap">${tagsHtml(d.tags)}</div></td>
       <td style="display:flex;gap:6px">
         <button class="btn btn-edit" onclick="editDeal(${d.id})">Edit</button>
         <button class="btn btn-danger" onclick="deleteDeal(${d.id})">Delete</button>
       </td>
-    </tr>`).join('') : '<tr><td colspan="5" class="empty">No deals</td></tr>';
+    </tr>`).join('') : '<tr><td colspan="6" class="empty">No deals</td></tr>';
 }
 
 function filterDeals() {
   const q      = document.getElementById('search-deals').value.toLowerCase();
   const status = document.getElementById('filter-deals-status').value;
+  const tagId  = Number(document.getElementById('filter-deals-tag').value);
   renderDeals(deals.filter(d => {
     const matchQ = [d.title, d.contact_name].some(v => (v || '').toLowerCase().includes(q));
     const matchS = !status || d.status === status;
-    return matchQ && matchS;
+    const matchT = !tagId || (d.tags || []).some(t => t.id === tagId);
+    return matchQ && matchS && matchT;
   }));
 }
 
@@ -1237,9 +1665,10 @@ function renderKanban(list) {
     col.innerHTML = group.length ? group.map(d => `
       <div class="kanban-card" draggable="true" data-id="${d.id}"
            ondragstart="onDragStart(event,${d.id})" ondragend="onDragEnd(event)">
-        <div class="kanban-card-title">${d.title}</div>
+        <div class="kanban-card-title"><a href="#" style="color:inherit;text-decoration:none" onclick="openDeal(${d.id});return false">${d.title}</a></div>
         ${d.contact_name ? `<div class="kanban-card-contact">👤 ${d.contact_name}</div>` : ''}
         <div class="kanban-card-amount">${d.amount ? d.amount.toLocaleString('en') + ' ₽' : 'No amount'}</div>
+        ${d.tags && d.tags.length ? `<div class="tags-wrap" style="margin-top:8px">${tagsHtml(d.tags)}</div>` : ''}
         <div class="kanban-card-actions">
           <button class="btn btn-edit" onclick="editDeal(${d.id})">Edit</button>
           <button class="btn btn-danger" onclick="deleteDeal(${d.id})">Delete</button>
@@ -1454,6 +1883,309 @@ async function checkDeadlines() {
   });
 }
 
+// --- Users ---
+
+function decodeToken() {
+  const t = getToken();
+  if (!t) return null;
+  try { return JSON.parse(atob(t.split('.')[1])); } catch { return null; }
+}
+
+function applyUserSession() {
+  const u = decodeToken();
+  if (!u) return;
+  document.getElementById('topbar-username').textContent = u.username;
+  const roleEl = document.getElementById('topbar-role');
+  roleEl.textContent = u.role;
+  roleEl.className = `role-badge role-${u.role}`;
+  const navUsers = document.getElementById('nav-users');
+  if (u.role === 'admin') navUsers.style.display = '';
+  else navUsers.style.display = 'none';
+}
+
+async function loadUsers() {
+  const users = await apiFetch(`${API}/users`).then(r => r.json());
+  const me = decodeToken();
+  const tbody = document.getElementById('users-body');
+  tbody.innerHTML = users.map(u => `
+    <tr class="${u.id === me?.id ? 'user-row-self' : ''}">
+      <td><strong>${u.username}</strong>${u.id === me?.id ? ' <span style="color:#bbb;font-size:12px">(you)</span>' : ''}</td>
+      <td><span class="role-badge role-${u.role}">${u.role}</span></td>
+      <td>${new Date(u.created_at).toLocaleDateString('en')}</td>
+      <td style="display:flex;gap:6px">
+        ${u.id !== me?.id ? `<button class="btn btn-danger" onclick="deleteUser(${u.id},'${u.username}')">Delete</button>` : ''}
+      </td>
+    </tr>`).join('');
+}
+
+async function createUser() {
+  const username = document.getElementById('new-user-username').value.trim();
+  const password = document.getElementById('new-user-password').value;
+  const role     = document.getElementById('new-user-role').value;
+  const errEl    = document.getElementById('new-user-error');
+  errEl.textContent = '';
+  if (!username || !password) { errEl.textContent = 'Username and password are required.'; return; }
+  const res = await apiFetch(`${API}/users`, {
+    method: 'POST', body: JSON.stringify({ username, password, role }),
+  });
+  if (!res.ok) { const d = await res.json(); errEl.textContent = d.error; return; }
+  closeModal('new-user');
+  document.getElementById('new-user-username').value = '';
+  document.getElementById('new-user-password').value = '';
+  document.getElementById('new-user-role').value = 'user';
+  loadUsers();
+}
+
+async function deleteUser(id, username) {
+  if (!confirm(`Delete user "${username}"?`)) return;
+  await apiFetch(`${API}/users/${id}`, { method: 'DELETE' });
+  loadUsers();
+}
+
+function openChangePassword() {
+  const me = decodeToken();
+  document.getElementById('cp-current').value = '';
+  document.getElementById('cp-new').value = '';
+  document.getElementById('cp-confirm').value = '';
+  document.getElementById('cp-error').textContent = '';
+  document.getElementById('current-password-group').style.display = me?.role === 'admin' ? 'none' : '';
+  document.getElementById('modal-change-password').classList.add('open');
+}
+
+async function savePassword() {
+  const me = decodeToken();
+  const current = document.getElementById('cp-current').value;
+  const newPwd  = document.getElementById('cp-new').value;
+  const confirm = document.getElementById('cp-confirm').value;
+  const errEl   = document.getElementById('cp-error');
+  errEl.textContent = '';
+  if (newPwd !== confirm) { errEl.textContent = 'Passwords do not match.'; return; }
+  if (newPwd.length < 4)  { errEl.textContent = 'Password must be at least 4 characters.'; return; }
+  const res = await apiFetch(`${API}/users/${me.id}/password`, {
+    method: 'PUT', body: JSON.stringify({ current_password: current, new_password: newPwd }),
+  });
+  if (!res.ok) { const d = await res.json(); errEl.textContent = d.error; return; }
+  closeModal('change-password');
+}
+
+// --- Tags ---
+
+let allTags = [];
+let selectedTagColor = 'blue';
+
+const TAG_COLORS = {
+  purple: { bg: '#e9d8fd', text: '#6741d9' },
+  blue:   { bg: '#d0ebff', text: '#1864ab' },
+  teal:   { bg: '#c3fae8', text: '#087f5b' },
+  green:  { bg: '#d3f9d8', text: '#2f9e44' },
+  yellow: { bg: '#fff3bf', text: '#b45309' },
+  orange: { bg: '#ffe8cc', text: '#c2410c' },
+  red:    { bg: '#ffe3e3', text: '#c92a2a' },
+  pink:   { bg: '#ffd6e0', text: '#a61e4d' },
+};
+
+function tagPill(tag, onRemove = null) {
+  const c = TAG_COLORS[tag.color] || TAG_COLORS.blue;
+  const rm = onRemove ? `<span class="tag-remove" onclick="${onRemove}">×</span>` : '';
+  return `<span class="tag-pill" style="background:${c.bg};color:${c.text}">${tag.name}${rm}</span>`;
+}
+
+function tagsHtml(tags) {
+  return tags && tags.length ? tags.map(t => tagPill(t)).join('') : '';
+}
+
+function renderColorSwatches(containerId, inputId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = Object.keys(TAG_COLORS).map(color => {
+    const c = TAG_COLORS[color];
+    return `<span class="color-swatch ${color === selectedTagColor ? 'selected' : ''}"
+      style="background:${c.bg};border-color:${color === selectedTagColor ? c.text : 'transparent'}"
+      onclick="selectTagColor('${color}','${containerId}','${inputId}')"></span>`;
+  }).join('');
+}
+
+function selectTagColor(color, containerId, inputId) {
+  selectedTagColor = color;
+  renderColorSwatches(containerId, inputId);
+}
+
+async function loadAllTags() {
+  allTags = await apiFetch(`${API}/tags`).then(r => r.json());
+}
+
+function populateTagSelects(entityTags, selectIds) {
+  const usedIds = new Set((entityTags || []).map(t => t.id));
+  const opts = '<option value="">Add existing tag...</option>' +
+    allTags.filter(t => !usedIds.has(t.id)).map(t => {
+      const c = TAG_COLORS[t.color] || TAG_COLORS.blue;
+      return `<option value="${t.id}">${t.name}</option>`;
+    }).join('');
+  selectIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = opts;
+  });
+}
+
+function populateTagFilters() {
+  const opts = '<option value="">All tags</option>' +
+    allTags.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+  ['filter-contacts-tag', 'filter-deals-tag'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = opts;
+  });
+}
+
+// Contact tag management
+function renderContactTags(contactTags) {
+  const wrap = document.getElementById('profile-tags-wrap');
+  wrap.innerHTML = contactTags.length
+    ? contactTags.map(t => tagPill(t, `removeTagFromContact(${t.id})`)).join('')
+    : '<span style="color:#bbb;font-size:13px">No tags</span>';
+  populateTagSelects(contactTags, ['profile-tag-select']);
+  renderColorSwatches('contact-color-swatches', 'new-tag-name');
+}
+
+async function addTagToContact() {
+  const sel = document.getElementById('profile-tag-select');
+  const tagId = Number(sel.value);
+  if (!tagId || !profileContactId) return;
+  await apiFetch(`${API}/contacts/${profileContactId}/tags`, {
+    method: 'POST', body: JSON.stringify({ tag_id: tagId }),
+  });
+  await refreshContactTags();
+}
+
+async function removeTagFromContact(tagId) {
+  await apiFetch(`${API}/contacts/${profileContactId}/tags/${tagId}`, { method: 'DELETE' });
+  await refreshContactTags();
+}
+
+async function createAndAddTagToContact() {
+  const name = document.getElementById('new-tag-name').value.trim();
+  if (!name) return;
+  const res = await apiFetch(`${API}/tags`, {
+    method: 'POST', body: JSON.stringify({ name, color: selectedTagColor }),
+  });
+  const { id } = await res.json();
+  await loadAllTags();
+  populateTagFilters();
+  document.getElementById('new-tag-name').value = '';
+  await apiFetch(`${API}/contacts/${profileContactId}/tags`, {
+    method: 'POST', body: JSON.stringify({ tag_id: id }),
+  });
+  await refreshContactTags();
+}
+
+async function refreshContactTags() {
+  contacts = await apiFetch(`${API}/contacts`).then(r => r.json());
+  const c = contacts.find(x => x.id === profileContactId);
+  renderContactTags(c?.tags || []);
+}
+
+// Deal tag management
+function renderDealTags(dealTags) {
+  const wrap = document.getElementById('deal-tags-wrap');
+  wrap.innerHTML = dealTags.length
+    ? dealTags.map(t => tagPill(t, `removeTagFromDeal(${t.id})`)).join('')
+    : '<span style="color:#bbb;font-size:13px">No tags</span>';
+  populateTagSelects(dealTags, ['deal-tag-select']);
+  renderColorSwatches('deal-color-swatches', 'deal-new-tag-name');
+}
+
+async function addTagToDeal() {
+  const sel = document.getElementById('deal-tag-select');
+  const tagId = Number(sel.value);
+  if (!tagId || !dealDetailId) return;
+  await apiFetch(`${API}/deals/${dealDetailId}/tags`, {
+    method: 'POST', body: JSON.stringify({ tag_id: tagId }),
+  });
+  await refreshDealTags();
+}
+
+async function removeTagFromDeal(tagId) {
+  await apiFetch(`${API}/deals/${dealDetailId}/tags/${tagId}`, { method: 'DELETE' });
+  await refreshDealTags();
+}
+
+async function createAndAddTagToDeal() {
+  const name = document.getElementById('deal-new-tag-name').value.trim();
+  if (!name) return;
+  const res = await apiFetch(`${API}/tags`, {
+    method: 'POST', body: JSON.stringify({ name, color: selectedTagColor }),
+  });
+  const { id } = await res.json();
+  await loadAllTags();
+  populateTagFilters();
+  document.getElementById('deal-new-tag-name').value = '';
+  await apiFetch(`${API}/deals/${dealDetailId}/tags`, {
+    method: 'POST', body: JSON.stringify({ tag_id: id }),
+  });
+  await refreshDealTags();
+}
+
+async function refreshDealTags() {
+  deals = await apiFetch(`${API}/deals`).then(r => r.json());
+  const d = deals.find(x => x.id === dealDetailId);
+  renderDealTags(d?.tags || []);
+}
+
+// --- Activity Log ---
+
+let activityFilter = '';
+
+function setActivityFilter(type) {
+  activityFilter = type;
+  document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  loadActivity();
+}
+
+function timeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr + 'Z').getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1)  return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24)  return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7)  return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString('en');
+}
+
+const activityMeta = {
+  contact: { icon: '👤', label: 'contact' },
+  deal:    { icon: '💼', label: 'deal' },
+  task:    { icon: '✓',  label: 'task' },
+};
+
+const actionMeta = {
+  created: { dot: 'dot-created', verb: 'Created' },
+  updated: { dot: 'dot-updated', verb: 'Updated' },
+  deleted: { dot: 'dot-deleted', verb: 'Deleted' },
+};
+
+async function loadActivity() {
+  const url = activityFilter
+    ? `${API}/activity?entity_type=${activityFilter}`
+    : `${API}/activity`;
+  const items = await apiFetch(url).then(r => r.json());
+  const el = document.getElementById('activity-list');
+  if (!items.length) { el.innerHTML = '<div class="empty">No activity yet</div>'; return; }
+  el.innerHTML = items.map(a => {
+    const am = actionMeta[a.action] || { dot: 'dot-updated', verb: a.action };
+    const em = activityMeta[a.entity_type] || { icon: '•', label: a.entity_type };
+    return `
+      <div class="activity-item">
+        <div class="activity-dot ${am.dot}">${em.icon}</div>
+        <div class="activity-body">
+          <div class="activity-text">${am.verb} <strong>${em.label}</strong> — ${a.entity_name || '(unnamed)'}</div>
+          <div class="activity-time">${timeAgo(a.created_at)}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
 // --- CSV Import ---
 
 let importRows = [];
@@ -1590,6 +2322,8 @@ async function confirmImport() {
 // Init
 setInterval(checkDeadlines, 60 * 60 * 1000);
 if (getToken()) {
+  applyUserSession();
+  loadAllTags().then(populateTagFilters);
   showTab('dashboard');
   requestNotifications().then(checkDeadlines);
 } else {
