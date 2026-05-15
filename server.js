@@ -161,9 +161,13 @@ app.put('/contacts/:id', (req, res) => {
 });
 
 app.delete('/contacts/:id', (req, res) => {
-  const row = db.prepare('SELECT name FROM contacts WHERE id=?').get(req.params.id);
-  db.prepare('DELETE FROM contacts WHERE id=?').run(req.params.id);
-  logActivity('deleted', 'contact', req.params.id, row?.name, req.user.id, req.user.username);
+  const id = req.params.id;
+  const row = db.prepare('SELECT name FROM contacts WHERE id=?').get(id);
+  db.prepare('UPDATE deals    SET contact_id = NULL WHERE contact_id = ?').run(id);
+  db.prepare('UPDATE tasks    SET contact_id = NULL WHERE contact_id = ?').run(id);
+  db.prepare('UPDATE messages SET contact_id = NULL WHERE contact_id = ?').run(id);
+  db.prepare('DELETE FROM contacts WHERE id=?').run(id);
+  logActivity('deleted', 'contact', id, row?.name, req.user.id, req.user.username);
   res.json({ success: true });
 });
 
