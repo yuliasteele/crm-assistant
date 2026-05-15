@@ -531,13 +531,21 @@ function executeTool(name, args, user = null) {
 app.post('/chat', async (req, res) => {
   const { message, contact_id, deal_id } = req.body;
 
-  const history = db.prepare(`
-    SELECT role, content FROM messages
-    WHERE contact_id IS ? AND deal_id IS ?
-    ORDER BY created_at ASC LIMIT 50
-  `).all(contact_id ?? null, deal_id ?? null);
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('X-Accel-Buffering', 'no');
+  res.flushHeaders();
 
-  const systemPrompt = `You are an internal CRM assistant. You have full access to the database of contacts, deals, and tasks. You can add, update, and delete any records upon user request. Always confirm exactly what you did in the database. Reply in English.
+  const send = (obj) => res.write(`data: ${JSON.stringify(obj)}\n\n`);
+
+  try {
+    const history = db.prepare(`
+      SELECT role, content FROM messages
+      WHERE contact_id IS ? AND deal_id IS ?
+      ORDER BY created_at ASC LIMIT 50
+    `).all(contact_id ?? null, deal_id ?? null);
+
+    const systemPrompt = `You are an internal CRM assistant. You have full access to the database of contacts, deals, and tasks. You can add, update, and delete any records upon user request. Always confirm exactly what you did in the database. Use markdown formatting in your responses — bold for names and amounts, bullet lists for multiple items.
 Use tools for any database changes — do not describe actions in words, execute them.
 IMPORTANT: pass names, surnames, company names, and any other data to the tools EXACTLY as the user wrote them — do not modify, correct, or substitute any word.
 Current CRM data:
@@ -546,57 +554,78 @@ Contacts: ${JSON.stringify(db.prepare('SELECT * FROM contacts').all())}
 Deals: ${JSON.stringify(db.prepare('SELECT * FROM deals').all())}
 Tasks: ${JSON.stringify(db.prepare('SELECT * FROM tasks').all())}`;
 
-  db.prepare('INSERT INTO messages (role, content, contact_id, deal_id) VALUES (?, ?, ?, ?)').run('user', message, contact_id ?? null, deal_id ?? null);
+    db.prepare('INSERT INTO messages (role, content, contact_id, deal_id) VALUES (?, ?, ?, ?)').run('user', message, contact_id ?? null, deal_id ?? null);
 
-  const messages = [
-    { role: 'system', content: systemPrompt },
-    ...history,
-    { role: 'user', content: message },
-  ];
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...history,
+      { role: 'user', content: message },
+    ];
 
-  let response = await groq.chat.completions.create({
-    model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-    max_tokens: 1024,
-    tools,
-    tool_choice: 'auto',
-    messages,
-  });
-
-  const toolsUsed = [];
-
-  while (response.choices[0].finish_reason === 'tool_calls') {
-    const assistantMsg = response.choices[0].message;
-    messages.push(assistantMsg);
-
-    const toolResults = assistantMsg.tool_calls.map(tc => {
-      let args = JSON.parse(tc.function.arguments);
-      if (tc.function.name === 'create_contact' || tc.function.name === 'update_contact') {
-        args = sanitizeContactArgs(args, message);
-      }
-      const result = executeTool(tc.function.name, args, req.user);
-      toolsUsed.push(tc.function.name);
-      return {
-        role: 'tool',
-        tool_call_id: tc.id,
-        content: JSON.stringify(result),
-      };
-    });
-
-    messages.push(...toolResults);
-
-    response = await groq.chat.completions.create({
+    // Phase 1: handle tool calls non-streaming
+    let response = await groq.chat.completions.create({
       model: 'meta-llama/llama-4-scout-17b-16e-instruct',
       max_tokens: 1024,
       tools,
       tool_choice: 'auto',
       messages,
     });
+
+    const toolsUsed = [];
+
+    while (response.choices[0].finish_reason === 'tool_calls') {
+      const assistantMsg = response.choices[0].message;
+      messages.push(assistantMsg);
+
+      const toolResults = assistantMsg.tool_calls.map(tc => {
+        let args = JSON.parse(tc.function.arguments);
+        if (tc.function.name === 'create_contact' || tc.function.name === 'update_contact') {
+          args = sanitizeContactArgs(args, message);
+        }
+        const result = executeTool(tc.function.name, args, req.user);
+        toolsUsed.push(tc.function.name);
+        return { role: 'tool', tool_call_id: tc.id, content: JSON.stringify(result) };
+      });
+
+      messages.push(...toolResults);
+
+      response = await groq.chat.completions.create({
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        max_tokens: 1024,
+        tools,
+        tool_choice: 'auto',
+        messages,
+      });
+    }
+
+    if (toolsUsed.length) send({ type: 'tools', toolsUsed });
+
+    // Phase 2: stream final text response
+    const stream = await groq.chat.completions.create({
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      max_tokens: 1024,
+      stream: true,
+      messages,
+    });
+
+    let fullReply = '';
+    for await (const chunk of stream) {
+      const delta = chunk.choices[0]?.delta?.content;
+      if (delta) {
+        fullReply += delta;
+        send({ type: 'delta', content: delta });
+      }
+    }
+
+    db.prepare('INSERT INTO messages (role, content, contact_id, deal_id) VALUES (?, ?, ?, ?)').run('assistant', fullReply, contact_id ?? null, deal_id ?? null);
+    send({ type: 'done' });
+
+  } catch (e) {
+    console.error('Chat error:', e.message);
+    send({ type: 'error', message: e.message });
   }
 
-  const reply = response.choices[0].message.content;
-  db.prepare('INSERT INTO messages (role, content, contact_id, deal_id) VALUES (?, ?, ?, ?)').run('assistant', reply, contact_id ?? null, deal_id ?? null);
-
-  res.json({ reply, toolsUsed });
+  res.end();
 });
 
 // --- Users ---

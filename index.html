@@ -11,6 +11,7 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@13/marked.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -237,6 +238,22 @@
     .msg-user { background: #6c63ff; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
     .msg-assistant { background: #fff; color: #1a1a2e; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
     .msg-loading { opacity: 0.5; font-style: italic; }
+    .msg-assistant p { margin: 4px 0; }
+    .msg-assistant p:first-child { margin-top: 0; }
+    .msg-assistant p:last-child { margin-bottom: 0; }
+    .msg-assistant ul, .msg-assistant ol { margin: 4px 0 4px 18px; }
+    .msg-assistant li { margin: 2px 0; }
+    .msg-assistant h1, .msg-assistant h2, .msg-assistant h3 { margin: 8px 0 4px; font-size: 15px; font-weight: 700; }
+    .msg-assistant strong { font-weight: 700; }
+    .msg-assistant code { background: rgba(0,0,0,0.07); padding: 1px 5px; border-radius: 3px; font-size: 12px; font-family: monospace; }
+    .msg-assistant pre { background: rgba(0,0,0,0.07); padding: 8px 12px; border-radius: 6px; overflow-x: auto; margin: 6px 0; }
+    .msg-assistant pre code { background: none; padding: 0; }
+    .msg-assistant table { border-collapse: collapse; width: 100%; margin: 6px 0; font-size: 13px; }
+    .msg-assistant th, .msg-assistant td { border: 1px solid rgba(0,0,0,0.12); padding: 4px 8px; text-align: left; }
+    .msg-assistant th { background: rgba(0,0,0,0.05); font-weight: 600; }
+    .typing-cursor { display: inline-block; width: 2px; height: 14px; background: #6c63ff; margin-left: 2px; vertical-align: middle; animation: blink 0.8s step-end infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .msg-tools-badge { font-size: 11px; color: #6c63ff; background: #f0eeff; border-radius: 12px; padding: 3px 10px; align-self: flex-start; margin-bottom: 2px; font-weight: 500; }
 
     .chat-input-row {
       display: flex;
@@ -616,6 +633,11 @@
     body.dark .chat-input-row input { background: #111827; border-color: #374151; color: #f9fafb; }
     body.dark .chat-input-row input:focus { border-color: #6c63ff; }
     body.dark .msg-assistant { background: #1f2937; color: #f9fafb; box-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+    body.dark .msg-assistant code { background: rgba(255,255,255,0.08); }
+    body.dark .msg-assistant pre  { background: rgba(255,255,255,0.06); }
+    body.dark .msg-assistant th, body.dark .msg-assistant td { border-color: rgba(255,255,255,0.12); }
+    body.dark .msg-assistant th   { background: rgba(255,255,255,0.06); }
+    body.dark .msg-tools-badge    { background: #2d2b5e; color: #a89fff; }
 
     body.dark .kanban-col   { background: #111827; }
     body.dark .kanban-col-header { color: #9ca3af; }
@@ -1605,7 +1627,7 @@ async function openContact(id) {
 
   const chatEl = document.getElementById('profile-chat-messages');
   chatEl.innerHTML = messages.length
-    ? messages.map(m => `<div class="msg msg-${m.role}">${m.content}</div>`).join('')
+    ? messages.map(m => `<div class="msg msg-${m.role}">${m.role === 'assistant' ? mdRender(m.content) : m.content}</div>`).join('')
     : '<div style="color:#bbb;font-size:13px;text-align:center;padding:20px 0">No chat history yet</div>';
   chatEl.scrollTop = chatEl.scrollHeight;
 
@@ -1665,32 +1687,14 @@ async function sendProfileMessage() {
   if (!text) return;
   input.value = '';
 
-  const chatEl = document.getElementById('profile-chat-messages');
-  const userMsg = document.createElement('div');
-  userMsg.className = 'msg msg-user';
-  userMsg.textContent = text;
-  chatEl.appendChild(userMsg);
+  const container = document.getElementById('profile-chat-messages');
+  const userEl = document.createElement('div');
+  userEl.className = 'msg msg-user';
+  userEl.textContent = text;
+  container.appendChild(userEl);
+  container.scrollTop = container.scrollHeight;
 
-  const loadingMsg = document.createElement('div');
-  loadingMsg.className = 'msg msg-assistant msg-loading';
-  loadingMsg.textContent = 'Typing...';
-  chatEl.appendChild(loadingMsg);
-  chatEl.scrollTop = chatEl.scrollHeight;
-
-  const res = await apiFetch(`${API}/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: text, contact_id: profileContactId }),
-  });
-  const data = await res.json();
-  loadingMsg.remove();
-
-  const aiMsg = document.createElement('div');
-  aiMsg.className = 'msg msg-assistant';
-  aiMsg.textContent = data.reply;
-  chatEl.appendChild(aiMsg);
-  chatEl.scrollTop = chatEl.scrollHeight;
-  speak(data.reply);
+  await streamChat({ message: text, contactId: profileContactId, container });
 }
 
 // --- Deals ---
@@ -1785,7 +1789,7 @@ async function openDeal(id) {
 
   const chatEl = document.getElementById('deal-chat-messages');
   chatEl.innerHTML = messages.length
-    ? messages.map(m => `<div class="msg msg-${m.role}">${m.content}</div>`).join('')
+    ? messages.map(m => `<div class="msg msg-${m.role}">${m.role === 'assistant' ? mdRender(m.content) : m.content}</div>`).join('')
     : '<div style="color:#bbb;font-size:13px;text-align:center;padding:20px 0">No chat history yet</div>';
   chatEl.scrollTop = chatEl.scrollHeight;
 
@@ -1841,31 +1845,14 @@ async function sendDealMessage() {
   if (!text) return;
   input.value = '';
 
-  const chatEl = document.getElementById('deal-chat-messages');
-  const userMsg = document.createElement('div');
-  userMsg.className = 'msg msg-user';
-  userMsg.textContent = text;
-  chatEl.appendChild(userMsg);
+  const container = document.getElementById('deal-chat-messages');
+  const userEl = document.createElement('div');
+  userEl.className = 'msg msg-user';
+  userEl.textContent = text;
+  container.appendChild(userEl);
+  container.scrollTop = container.scrollHeight;
 
-  const loadingMsg = document.createElement('div');
-  loadingMsg.className = 'msg msg-assistant msg-loading';
-  loadingMsg.textContent = 'Typing...';
-  chatEl.appendChild(loadingMsg);
-  chatEl.scrollTop = chatEl.scrollHeight;
-
-  const res = await apiFetch(`${API}/chat`, {
-    method: 'POST',
-    body: JSON.stringify({ message: text, deal_id: dealDetailId }),
-  });
-  const data = await res.json();
-  loadingMsg.remove();
-
-  const aiMsg = document.createElement('div');
-  aiMsg.className = 'msg msg-assistant';
-  aiMsg.textContent = data.reply;
-  chatEl.appendChild(aiMsg);
-  chatEl.scrollTop = chatEl.scrollHeight;
-  speak(data.reply);
+  await streamChat({ message: text, dealId: dealDetailId, container });
 }
 
 // --- Tasks ---
@@ -2003,41 +1990,109 @@ function renderCalendar() {
 }
 
 // --- Chat ---
+
+function mdRender(text) {
+  return marked.parse(text, { breaks: true, gfm: true });
+}
+
+async function streamChat({ message, contactId = null, dealId = null, container, onToolsUsed }) {
+  const body = { message };
+  if (contactId) body.contact_id = contactId;
+  if (dealId)    body.deal_id    = dealId;
+
+  const aiEl = document.createElement('div');
+  aiEl.className = 'msg msg-assistant';
+  aiEl.innerHTML = '<span class="typing-cursor"></span>';
+  container.appendChild(aiEl);
+  container.scrollTop = container.scrollHeight;
+
+  let fullText = '';
+  let toolsUsed = [];
+
+  try {
+    const res = await fetch(`${API}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+      body: JSON.stringify(body),
+    });
+
+    if (res.status === 401) { showLogin(); return; }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const parts = buf.split('\n\n');
+      buf = parts.pop();
+      for (const part of parts) {
+        if (!part.startsWith('data: ')) continue;
+        let evt;
+        try { evt = JSON.parse(part.slice(6)); } catch { continue; }
+
+        if (evt.type === 'tools' && evt.toolsUsed.length) {
+          toolsUsed = evt.toolsUsed;
+          const badge = document.createElement('div');
+          badge.className = 'msg-tools-badge';
+          badge.textContent = '⚡ ' + evt.toolsUsed.map(t => t.replace(/_/g, ' ')).join(' · ');
+          container.insertBefore(badge, aiEl);
+        }
+        if (evt.type === 'delta') {
+          fullText += evt.content;
+          aiEl.innerHTML = mdRender(fullText) + '<span class="typing-cursor"></span>';
+          container.scrollTop = container.scrollHeight;
+        }
+        if (evt.type === 'done') {
+          aiEl.innerHTML = mdRender(fullText);
+          speak(fullText.replace(/[#*`_]/g, ''));
+          if (onToolsUsed && toolsUsed.length) onToolsUsed(toolsUsed);
+        }
+        if (evt.type === 'error') {
+          aiEl.textContent = 'Error: ' + evt.message;
+        }
+      }
+    }
+  } catch (e) {
+    aiEl.textContent = 'Connection error. Is the server running?';
+  }
+}
+
 async function sendMessage() {
   const input = document.getElementById('chat-input');
   const text = input.value.trim();
   if (!text) return;
   input.value = '';
 
-  appendMsg('user', text);
-  const loading = appendMsg('assistant', 'Typing...', true);
+  const container = document.getElementById('chat-messages');
+  const userEl = document.createElement('div');
+  userEl.className = 'msg msg-user';
+  userEl.textContent = text;
+  container.appendChild(userEl);
+  container.scrollTop = container.scrollHeight;
 
-  const res = await apiFetch(`${API}/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: text })
+  await streamChat({
+    message: text,
+    container,
+    onToolsUsed: async (toolsUsed) => {
+      const affected = new Set(toolsUsed.map(t => t.replace(/_(contact|deal|task)$/, '').replace(/^(create|update|delete)_/, '')));
+      if (affected.has('contact')) contacts = await apiFetch(`${API}/contacts`).then(r => r.json());
+      if (affected.has('deal'))    deals    = await apiFetch(`${API}/deals`).then(r => r.json());
+      if (affected.has('task'))    tasks    = await apiFetch(`${API}/tasks`).then(r => r.json());
+      const tab = document.querySelector('.nav-item.active')?.textContent;
+      if (tab === 'Contacts') renderContacts(contacts);
+      if (tab === 'Deals')    renderDeals(deals);
+      if (tab === 'Tasks')    renderTasks(tasks);
+    },
   });
-  const data = await res.json();
-  loading.remove();
-  appendMsg('assistant', data.reply);
-  speak(data.reply);
-
-  if (data.toolsUsed && data.toolsUsed.length > 0) {
-    const affected = new Set(data.toolsUsed.map(t => t.replace(/_(contact|deal|task)$/, '').replace(/^(create|update|delete)_/, '')));
-    if (affected.has('contact')) { contacts = await apiFetch(`${API}/contacts`).then(r => r.json()); }
-    if (affected.has('deal'))    { deals    = await apiFetch(`${API}/deals`).then(r => r.json()); }
-    if (affected.has('task'))    { tasks    = await apiFetch(`${API}/tasks`).then(r => r.json()); }
-    const currentTab = document.querySelector('.nav-item.active')?.textContent;
-    if (currentTab === 'Contacts') loadContacts();
-    if (currentTab === 'Deals')   loadDeals();
-    if (currentTab === 'Tasks')   loadTasks();
-  }
 }
 
 function appendMsg(role, text, loading = false) {
   const el = document.createElement('div');
   el.className = `msg msg-${role}${loading ? ' msg-loading' : ''}`;
-  el.textContent = text;
+  if (role === 'assistant') el.innerHTML = mdRender(text); else el.textContent = text;
   const container = document.getElementById('chat-messages');
   container.appendChild(el);
   container.scrollTop = container.scrollHeight;
